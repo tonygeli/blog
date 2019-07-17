@@ -4,13 +4,80 @@
   <title><![CDATA[lilaiqun]]></title>
   <link href="blog.lilaiqun.com/atom.xml" rel="self"/>
   <link href="blog.lilaiqun.com/"/>
-  <updated>2019-07-16T16:23:35+08:00</updated>
+  <updated>2019-07-16T16:24:03+08:00</updated>
   <id>blog.lilaiqun.com/</id>
   <author>
     <name><![CDATA[]]></name>
     
   </author>
   <generator uri="http://www.mweb.im/">MWeb</generator>
+  
+  <entry>
+    <title type="html"><![CDATA[深入浅出gRPC]]></title>
+    <link href="blog.lilaiqun.com/15633722743311.html"/>
+    <updated>2019-07-17T22:04:34+08:00</updated>
+    <id>blog.lilaiqun.com/15633722743311.html</id>
+    <content type="html"><![CDATA[
+<p>详解gRPC运作机制与原理<br/>
+李林锋<br/>
+《Netty 权威指南》、《分布式服务框架原理与实践》作者。</p>
+
+<span id="more"></span><!-- more -->
+
+<ul>
+<li>01 | gRPC 入门及服务端创建和调用原理</li>
+<li>02 | 客户端创建和调用原理</li>
+<li>03 | gRPC 线程模型分析</li>
+<li>04 | gRPC 服务调用原理</li>
+<li>05 | gRPC 安全性设计</li>
+<li>06 | gRPC 序列化机制</li>
+</ul>
+
+<p>添加微信获取课程<br/>
+<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[算法面试通关40讲]]></title>
+    <link href="blog.lilaiqun.com/15633721987028.html"/>
+    <updated>2019-07-17T22:03:18+08:00</updated>
+    <id>blog.lilaiqun.com/15633721987028.html</id>
+    <content type="html"><![CDATA[
+<p>前Facebook工程师带你吃透大厂面试题<br/>
+覃超<br/>
+Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕士</p>
+
+<span id="more"></span><!-- more -->
+
+<p><img src="http://images.lilaiqun.com/15633722288813.jpg" alt=""/></p>
+
+<p>添加微信获取课程<br/>
+<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Linux性能优化实战]]></title>
+    <link href="blog.lilaiqun.com/15633721257544.html"/>
+    <updated>2019-07-17T22:02:05+08:00</updated>
+    <id>blog.lilaiqun.com/15633721257544.html</id>
+    <content type="html"><![CDATA[
+<p>10分钟帮你找到系统瓶颈<br/>
+倪朋飞<br/>
+微软资深工程师，Kubernetes项目维护者</p>
+
+<span id="more"></span><!-- more -->
+
+<p><img src="http://images.lilaiqun.com/15633721550369.jpg" alt=""/></p>
+
+<p>添加微信获取课程<br/>
+<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[数据分析实战45讲]]></title>
