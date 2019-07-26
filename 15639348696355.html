@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  Linux性能优化实战 - lilaiqun
+  第二篇 Swoole Task 的应用 - lilaiqun
   
   </title>
   
@@ -133,14 +133,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>Linux性能优化实战</h1>
+          <h1>第二篇 Swoole Task 的应用</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/7/17</span>
+          <span class="date">2019/7/24</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html'>极客时间</a></span>
+              <span class="posted-in"><a href='PHP.html'>PHP</a></span>
            
          
           <span class="comments">
@@ -153,16 +153,252 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <p>10分钟帮你找到系统瓶颈<br/>
-倪朋飞<br/>
-微软资深工程师，Kubernetes项目维护者</p>
+      <p>投递一个异步任务到task_worker池中。此函数是非阻塞的，执行完毕会立即返回。Worker进程可以继续处理新的请求。使用Task功能，必须先设置 task_worker_num，并且必须设置Server的onTask和onFinish事件回调函数。</p>
 
 <span id="more"></span><!-- more -->
 
-<p><img src="http://images.lilaiqun.com/15633721550369.jpg" alt=""/></p>
+<blockquote>
+<p>转自：公众号 - 新亮笔记</p>
+</blockquote>
 
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
+<h1 id="toc_0">一代码</h1>
+
+<h2 id="toc_1">server.php</h2>
+
+<pre><code class="language-php">&lt;?php
+class Server
+{
+    private $serv;
+    public function __construct()
+    {
+        $this-&gt;serv = new swoole_server(&#39;0.0.0.0&#39;, 9501;
+        $this-&gt;serv-&gt;set([
+            &#39;worker_num&#39; =&gt; 2,  //开启2个worker进程
+            &#39;max_request&#39; =&gt; 4, //每个worker进程 max_request设置为4次
+            &#39;task_worker_num&#39; =&gt; 4, //开启4个task进程
+            &#39;dispatch_mode&#39; =&gt; 2,   //数据包分发策略 - 固定模式
+        ]);
+        $this-&gt;serv-&gt;on(&#39;Start&#39;, [$this, &#39;onStart&#39;]);
+        $this-&gt;serv-&gt;on(&#39;Connect&#39;, [$this, &#39;onConnect&#39;]);
+        $this-&gt;serv-&gt;on(&quot;Receive&quot;, [$this, &#39;onReceive&#39;]);
+        $this-&gt;serv-&gt;on(&quot;Close&quot;, [$this, &#39;onClose&#39;]);
+        $this-&gt;serv-&gt;on(&quot;Task&quot;, [$this, &#39;onTask&#39;]);
+        $this-&gt;serv-&gt;on(&quot;Finish&quot;, [$this, &#39;onFinish&#39;]);
+        $this-&gt;serv-&gt;start();
+    }
+
+    public function onStart($serv)
+    {
+        echo &quot;#### onStart ####&quot; . PHP_EOL;
+        echo &quot;SWOOLE &quot; . SWOOLE_VERSION . &quot; 服务已启动&quot; . PHP_EOL;
+        echo &quot;master_pid: {$serv-&gt;master_pid}&quot; . PHP_EOL;
+        echo &quot;manager_pid: {$serv-&gt;manager_pid}&quot; . PHP_EOL;
+        echo &quot;########&quot; . PHP_EOL . PHP_EOL;
+    }
+
+    public function onConnect($serv, $fd) {
+        echo &quot;#### onConnect ####&quot; . PHP_EOL;
+        echo &quot;客户端:&quot; . $fd . &quot; 已连接&quot; . PHP_EOL;
+        echo &quot;########&quot; . PHP_EOL;
+    }
+
+    public function onReceive($serv, $fd, $from_id, $data) {
+        echo &quot;#### onReceive ####&quot; . PHP_EOL;
+        echo &quot;worker_pid: {$serv-&gt;worker_pid}&quot; . PHP_EOL;
+        echo &quot;客户端:{$fd} 发来的Email:{$data}&quot; . PHP_EOL;
+        $param = [
+            &#39;fd&#39; =&gt; $fd,
+            &#39;email&#39; =&gt; $data
+        ];
+        $rs = $serv-&gt;task(json_encode($param));
+        if ($rs === false) {
+            echo &quot;任务分配失败 Task &quot; . $rs . PHP_EOL;
+        } else {
+            echo &quot;任务分配成功 Task &quot; . $rs . PHP_EOL;
+        }
+        echo &quot;########&quot; . PHP_EOL . PHP_EOL;
+    }
+
+    public function onTask($serv, $task_id, $from_id, $data) {
+        echo &quot;#### onTask ####&quot; . PHP_EOL;
+        echo &quot;#{$serv-&gt;worker_id} onTask: [PID={$serv-&gt;worker_pid}]: task_id={$task_id}&quot; . PHP_EOL;
+        //业务代码
+        for ($i = 1; $i &lt;= 5; $i++) {
+            sleep(2);
+            echo &quot;Task {$task_id} 已完成了 {$i}/5 的任务&quot; . PHP_EOL;
+        }
+        $data_arr = json_decode($data, true);
+
+        $serv-&gt;send($data_arr[&#39;fd&#39;], &#39;Email:&#39; . $data_arr[&#39;email&#39;] . &#39;,发送成功&#39;);
+        $serv-&gt;finish($data);
+        echo &quot;########&quot; . PHP_EOL;
+    }
+
+    public function onFinish($serv, $task_id, $data) {
+        echo &quot;#### onFinish ####&quot; . PHP_EOL;
+        echo &quot;Task {$task_id} 已完成&quot; . PHP_EOL;
+        echo &quot;########&quot; . PHP_EOL;
+    }
+
+    public function onClose($serv, $fd) {
+        echo &quot;Client Close.&quot; . PHP_EOL;
+    }
+}
+
+$server = new Server();
+</code></pre>
+
+<p>client.php</p>
+
+<pre><code class="language-php">&lt;?php
+class Client
+{   
+    private $client;
+    
+    public function __construct() {
+        $this-&gt;client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+        $this-&gt;client-&gt;on(&#39;Connect&#39;, [$this, &#39;onConnect&#39;]);
+        $this-&gt;client-&gt;on(&#39;Receive&#39;, [$this, &#39;onReceive&#39;]);
+        $this-&gt;client-&gt;on(&#39;Close&#39;, [$this, &#39;onClose&#39;]);
+        $this-&gt;client-&gt;on(&#39;Error&#39;, [$this, &#39;onError&#39;]);
+    }
+    
+    public function connect() {
+        if (!$fp = $this-&gt;client-&gt;connect(&#39;127.0.0.1&#39;, 9501, 1)) {
+            echo &quot;Error: {$fp-&gt;errMsg}[{$fp-&gt;errCode}]&quot; . PHP_EOL;
+            return;
+        }
+    }
+
+    public function onConnect($cli) {
+        fwrite(STDOUT, &quot;输入Email:&quot;);
+        swoole_event_add(STDIN, function(){
+            fwrite(STDOUT, &quot;输入内容:&quot;);
+            $msg = trim(fgets(STDIN));
+            $this-&gt;send($msg);
+        });
+    }
+
+    public function onReceive($cli, $data) {
+        echo PHP_EOL . &quot;Received: &quot; . $data . PHP_EOL; 
+    }
+
+    public function send($data) {
+        $this-&gt;client-&gt;send($data);
+    }
+
+    public function onClose($cli) {
+        echo &quot;Client close connection&quot; . PHP_EOL; 
+    }
+
+    public function onError() {
+
+    }
+}
+
+
+$client = new Client();
+$client-&gt;connect();
+</code></pre>
+
+<h2 id="toc_2">输出</h2>
+
+<pre><code class="language-text"># 1.启动服务端
+&gt; php server.php
+
+#### onStart ####
+SWOOLE 1.10.4 服务已启动
+master_pid: 4258
+manager_pid: 4259
+########
+
+# 2.启动客户端
+&gt; php client.php
+
+输入Email: aaa@bb.com
+
+# 3.服务端接收到请求
+
+#### onConnect ####
+客户端:1 已连接
+########
+#### onReceive ####
+worker_pid: 4264
+客户端:1 发来的Email:aaa@bb.com
+任务分配成功 Task 0
+########
+
+#### onTask ####
+#2 onTask: [PID=4260]: task_id=0
+Task 0 已完成了 1/5 的任务
+Task 0 已完成了 2/5 的任务
+Task 0 已完成了 3/5 的任务
+Task 0 已完成了 4/5 的任务
+Task 0 已完成了 5/5 的任务
+########
+#### onFinish ####
+Task 0 已完成
+########
+
+# 4.客户端收到消息
+
+Received: Email:aaa@bb.com,发送成功
+</code></pre>
+
+<h2 id="toc_3">查看运行中的进程</h2>
+
+<p>总共8个进程（1个master进程、1个manager进程、4个task进程、2个worker进程）</p>
+
+<pre><code class="language-text">&gt; ps -ef|grep &#39;server.php&#39; | grep -v &#39;grep&#39;
+
+501  4258   670   0  1:54下午 ttys003    0:06.90 php server.php
+501  4259  4258   0  1:54下午 ttys003    0:00.00 php server.php
+501  4260  4259   0  1:54下午 ttys003    0:00.01 php server.php
+501  4261  4259   0  1:54下午 ttys003    0:00.00 php server.php
+501  4262  4259   0  1:54下午 ttys003    0:00.00 php server.php
+501  4263  4259   0  1:54下午 ttys003    0:00.00 php server.php
+501  4264  4259   0  1:54下午 ttys003    0:00.01 php server.php
+501  4265  4259   0  1:54下午 ttys003    0:00.00 php server.php
+</code></pre>
+
+<p>master进程：4258<br/>
+manager进程：4259</p>
+
+<h1 id="toc_4">二为什么执行了5次后，worker进程号发生了改变？</h1>
+
+<p>因为我们设了置worker进程的max_request=4，一个worker进程在完成最大请求次数任务后将自动退出，进程退出会释放所有的内存和资源，这样的机制主要是解决PHP进程内存溢出的问题。</p>
+
+<h1 id="toc_5">三当task执行任务异常，我们kill一个task进程，会再新增一个吗？</h1>
+
+<p>会。</p>
+
+<h1 id="toc_6">四如何设置 task_worker_num ？</h1>
+
+<p>最大值不得超过 SWOOLE_CPU_NUM * 1000。<br/>
+查看本机 CPU 核数：</p>
+
+<pre><code class="language-text">&gt; php -a
+&gt; echo swoole_cpu_num();
+</code></pre>
+
+<p>根据项目的任务量决定的，比如：1秒会产生200个任务，执行每个任务需要500ms。<br/>
+想在1s中执行完成200个任务，需要100个task进程。<br/>
+100 = 200/(1/0.5)</p>
+
+<h1 id="toc_7">五如何设置 worker_num ？</h1>
+
+<p>默认设置为本机的CPU核数，最大不得超过 SWOOLE_CPU_NUM * 1000。<br/>
+比如：1个请求耗时10ms，要提供1000QPS的处理能力，那就必须配置10个进程。<br/>
+10 = 0.01*1000<br/>
+假设每个进程占用40M内存，10个进程就需要占用400M的内存。</p>
+
+<p>扩展</p>
+
+<ul>
+<li>Server-&gt;taskwait</li>
+<li>Server-&gt;taskWaitMulti</li>
+<li>Server-&gt;taskCo</li>
+</ul>
 
 
     
@@ -173,16 +409,13 @@
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15633721987028.html" 
-          title="Previous Post: 算法面试通关40讲">&laquo; 算法面试通关40讲</a>
-      
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15632653643382.html" 
-          title="Next Post: 数据分析实战45讲">数据分析实战45讲 &raquo;</a>
+          <a  href="996.html" 
+          title="Next Post: 996名单列表">996名单列表 &raquo;</a>
       
       </p>
         </div>

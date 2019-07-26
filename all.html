@@ -8,7 +8,7 @@
   lilaiqun
   
   </title>
-  <meta name="keywords" content="996 互联网公司" />
+  
   
   <link href="atom.xml" rel="alternate" title="lilaiqun" type="application/atom+xml">
     <link rel="stylesheet" href="asset/css/foundation.min.css" />
@@ -133,48 +133,15 @@
 		<div class="markdown-body home-categories">
 		
 			<div class="article">
-                <a class="clearlink" href="15632615375886.html">
+                <a class="clearlink" href="15639348696355.html">
                 
-                  <h1>设为首页 收藏本站</h1>
+                  <h1>第二篇 Swoole Task 的应用</h1>
                   <div class="a-content">
                       
                       <div class="a-content-text">
                         
-                        	<pre><code class="language-text">&lt;script&gt;
-    //设为首页
-    function SetHome(obj,url){
-        try{
-            obj.style.behavior=&#39;url(#default#homepage)&#39;;
-            obj.setHomePage(url);
-        }catch(e){
-            if(window.netscape){
-                try{
-                    netscape.security.PrivilegeManager.enablePrivilege(&quot;UniversalXPConnect&quot;);
-                }catch(e){
-                    alert(&quot;抱歉，此操作被浏览器拒绝！\n\n请在浏览器地址栏输入“about:config”并回车然后将[signed.applets.codebase_principal_support]设置为&#39;true&#39;&quot;);
-                }
-            }else{
-                alert(&quot;抱歉，您所使用的浏览器无法完成此操作。\n\n您需要手动将【&quot;+url+&quot;】设置为首页。&quot;);
-            }
-        }
-    }
+                        	<p>投递一个异步任务到task_worker池中。此函数是非阻塞的，执行完毕会立即返回。Worker进程可以继续处理新的请求。使用Task功能，必须先设置 task_worker_num，并且必须设置Server的onTask和onFinish事件回调函数。</p>
 
-    //收藏本站
-    function AddFavorite(title, url) {
-        try {
-            window.external.addFavorite(url, title);
-        }
-        catch (e) {
-            try {
-                window.sidebar.addPanel(title, url, &quot;&quot;);
-            }
-            catch (e) {
-                alert(&quot;抱歉，您所使用的浏览器无法完成此操作。\n\n加入收藏失败，请进入新网站后使用Ctrl+D进行添加&quot;);
-            }
-        }
-    }
-&lt;/script&gt;
-</code></pre>
 
                         
                       </div>
@@ -182,11 +149,11 @@
                 </a>
                 <div class="read-more clearfix">
                   <div class="more-left left">
-                  
-                    <span class="date">2019/7/16</span>
+                   <a href="15639348696355.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/24</span>
                     <span>posted in&nbsp;</span> 
           				  
-          					    <span class="posted-in"><a href='Javascript.html'>Javascript</a></span>
+          					    <span class="posted-in"><a href='PHP.html'>PHP</a></span>
           				   
                   </div>
                   <div class="more-right right">
@@ -200,19 +167,26 @@
               </div><!-- article -->
         
 			<div class="article">
-                <a class="clearlink" href="15632618037754.html">
+                <a class="clearlink" href="996.html">
                 
-                  <h1>贫穷的本质</h1>
+                  <h1>996名单列表</h1>
                   <div class="a-content">
                       
                       <div class="a-content-text">
                         
-                        	<p>关于本书作者：</p>
-
-<blockquote>
-<p>阿比吉特·班纳吉和埃斯特·迪弗洛，两人都是美国麻省理工学院的教授，班纳吉是麻省理工学院福特基金会国际经济学教授，曾任世界银行荣誉顾问。迪弗洛麻省理工学院经济系阿卜杜勒·拉蒂夫·贾米尔扶贫与发展经济学教授，2009年被《经济学人》杂志评为“八大杰出经济学家”之一。</p>
+                        	<blockquote>
+<p>引用： <a href="https://github.com/996icu/996.ICU">https://github.com/996icu/996.ICU</a></p>
 </blockquote>
 
+<h2 id="toc_0">声明与注意事项</h2>
+
+<ul>
+<li>本仓库只在筛选出符合上述要求的PR后，在本页面作出展示。</li>
+<li>信息由众人贡献，请自行甄别真伪，并注意消息来源的时效性及公信力。</li>
+<li>同公司不同部门规定有可能不同，公司在名单中不代表该公司全部岗位存在该情况，仅供参考。</li>
+<li>如果您认为名单中的某公司不应属此列或存在被抹黑的情况，请提PR说明情况，核实后将会更正或删除。</li>
+</ul>
+
 
                         
                       </div>
@@ -220,11 +194,11 @@
                 </a>
                 <div class="read-more clearfix">
                   <div class="more-left left">
-                   <a href="15632618037754.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/16</span>
+                   <a href="996.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/23</span>
                     <span>posted in&nbsp;</span> 
           				  
-          					    <span class="posted-in"><a href='%E4%B9%A6%E7%B1%8D%E6%8E%A8%E8%8D%90.html'>书籍推荐</a></span>
+          					    <span class="posted-in"><a href='%E9%9A%8F%E7%AC%94.html'>随笔</a></span>
           				   
                   </div>
                   <div class="more-right right">
@@ -238,14 +212,20 @@
               </div><!-- article -->
         
 			<div class="article">
-                <a class="clearlink" href="15632578058179.html">
+                <a class="clearlink" href="15638622569963.html">
                 
-                  <h1>Typora 0.9.9.7.6</h1>
+                  <h1>第一篇 Swoole Timer 的应用</h1>
                   <div class="a-content">
                       
                       <div class="a-content-text">
                         
-                        	<p><code>极简Markdown编辑器</code>  这款软件可以直观的看到源部分和预览部分，非常的方便。<br/>
+                        	<p>应用场景:</p>
+
+<ol>
+<li>每天凌晨跑业务脚本</li>
+<li>设计一个用WEB界面管理管理定时任务的系统。</li>
+</ol>
+
 
                         
                       </div>
@@ -253,11 +233,49 @@
                 </a>
                 <div class="read-more clearfix">
                   <div class="more-left left">
-                   <a href="15632578058179.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/16</span>
+                   <a href="15638622569963.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/23</span>
                     <span>posted in&nbsp;</span> 
           				  
-          					    <span class="posted-in"><a href='%E8%BD%AF%E4%BB%B6%E6%8E%A8%E8%8D%90.html'>软件推荐</a></span>
+          					    <span class="posted-in"><a href='PHP.html'>PHP</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="15638621513516.html">
+                
+                  <h1>Swoole 文章汇总</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>第一篇：<a href="15638622569963.html">Swoole Timer 的应用</a><br/>
+第二篇：<a href="15639348696355.html">第二篇 Swoole Task 的应用</a></p>
+
+<p>第三篇：Swoole WebSocket 的应用<br/>
+<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect</a></p>
+
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="15638621513516.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/23</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='PHP.html'>PHP</a></span>
           				   
                   </div>
                   <div class="more-right right">
@@ -518,19 +536,18 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
               </div><!-- article -->
         
 			<div class="article">
-                <a class="clearlink" href="15638622569963.html">
+                <a class="clearlink" href="15632618037754.html">
                 
-                  <h1>Swoole Timer 的应用</h1>
+                  <h1>贫穷的本质</h1>
                   <div class="a-content">
                       
                       <div class="a-content-text">
                         
-                        	<p>应用场景:</p>
+                        	<p>关于本书作者：</p>
 
-<ol>
-<li>每天凌晨跑业务脚本</li>
-<li>设计一个用WEB界面管理管理定时任务的系统。</li>
-</ol>
+<blockquote>
+<p>阿比吉特·班纳吉和埃斯特·迪弗洛，两人都是美国麻省理工学院的教授，班纳吉是麻省理工学院福特基金会国际经济学教授，曾任世界银行荣誉顾问。迪弗洛麻省理工学院经济系阿卜杜勒·拉蒂夫·贾米尔扶贫与发展经济学教授，2009年被《经济学人》杂志评为“八大杰出经济学家”之一。</p>
+</blockquote>
 
 
                         
@@ -539,11 +556,11 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
                 </a>
                 <div class="read-more clearfix">
                   <div class="more-left left">
-                   <a href="15638622569963.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/23</span>
+                   <a href="15632618037754.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/16</span>
                     <span>posted in&nbsp;</span> 
           				  
-          					    <span class="posted-in"><a href='PHP.html'>PHP</a></span>
+          					    <span class="posted-in"><a href='%E4%B9%A6%E7%B1%8D%E6%8E%A8%E8%8D%90.html'>书籍推荐</a></span>
           				   
                   </div>
                   <div class="more-right right">
@@ -557,40 +574,48 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
               </div><!-- article -->
         
 			<div class="article">
-                <a class="clearlink" href="15638621513516.html">
+                <a class="clearlink" href="15632615375886.html">
                 
-                  <h1>Swoole 文章汇总</h1>
+                  <h1>设为首页 收藏本站</h1>
                   <div class="a-content">
                       
                       <div class="a-content-text">
                         
-                        	<p>第一篇：<a href="15638622569963.html">Swoole Timer 的应用</a><br/>
-第二篇：Swoole Task 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448834994&amp;idx=1&amp;sn=3650b422adebc436f47cec7505b334fe&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448834994&amp;idx=1&amp;sn=3650b422adebc436f47cec7505b334fe&amp;scene=21#wechat_redirect</a></p>
+                        	<pre><code class="language-text">&lt;script&gt;
+    //设为首页
+    function SetHome(obj,url){
+        try{
+            obj.style.behavior=&#39;url(#default#homepage)&#39;;
+            obj.setHomePage(url);
+        }catch(e){
+            if(window.netscape){
+                try{
+                    netscape.security.PrivilegeManager.enablePrivilege(&quot;UniversalXPConnect&quot;);
+                }catch(e){
+                    alert(&quot;抱歉，此操作被浏览器拒绝！\n\n请在浏览器地址栏输入“about:config”并回车然后将[signed.applets.codebase_principal_support]设置为&#39;true&#39;&quot;);
+                }
+            }else{
+                alert(&quot;抱歉，您所使用的浏览器无法完成此操作。\n\n您需要手动将【&quot;+url+&quot;】设置为首页。&quot;);
+            }
+        }
+    }
 
-<p>第三篇：Swoole WebSocket 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect</a></p>
-
-<p>第四篇：Swoole HTTP 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835017&amp;idx=1&amp;sn=0702c96c7cf0086b8c3d8da9b6bd8160&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835017&amp;idx=1&amp;sn=0702c96c7cf0086b8c3d8da9b6bd8160&amp;scene=21#wechat_redirect</a></p>
-
-<p>第五篇：Swoole 多协议 多端口 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835038&amp;idx=1&amp;sn=9aa1dd1c76fbdfdae1c110f411c3f9e3&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835038&amp;idx=1&amp;sn=9aa1dd1c76fbdfdae1c110f411c3f9e3&amp;scene=21#wechat_redirect</a></p>
-
-<p>第六篇：Swoole 整合成一个小框架<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835048&amp;idx=1&amp;sn=dc358c5fbc91a73faf4d04b1d45e71eb&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835048&amp;idx=1&amp;sn=dc358c5fbc91a73faf4d04b1d45e71eb&amp;scene=21#wechat_redirect</a></p>
-
-<p>第七篇：Swoole RPC 的实现<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835054&amp;idx=1&amp;sn=26c27656b53923cc3f81a2aeb66c8d2b&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835054&amp;idx=1&amp;sn=26c27656b53923cc3f81a2aeb66c8d2b&amp;scene=21#wechat_redirect</a></p>
-
-<p>第八篇：Swoole MySQL 连接池的实现<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835060&amp;idx=1&amp;sn=cc3e4ae8774338b56389ec3d29fbf69d&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835060&amp;idx=1&amp;sn=cc3e4ae8774338b56389ec3d29fbf69d&amp;scene=21#wechat_redirect</a></p>
-
-<p>第九篇：Swoole Redis 连接池的实现<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835070&amp;idx=1&amp;sn=097c0972f92537ca2f8a68944b8fd8d5&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835070&amp;idx=1&amp;sn=097c0972f92537ca2f8a68944b8fd8d5&amp;scene=21#wechat_redirect</a></p>
-
-<p>第十篇：压测 swoole_websocket_server 性能<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835077&amp;idx=1&amp;sn=26e3db1a758409b7d2fdf82698094c47&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835077&amp;idx=1&amp;sn=26e3db1a758409b7d2fdf82698094c47&amp;scene=21#wechat_redirect</a></p>
+    //收藏本站
+    function AddFavorite(title, url) {
+        try {
+            window.external.addFavorite(url, title);
+        }
+        catch (e) {
+            try {
+                window.sidebar.addPanel(title, url, &quot;&quot;);
+            }
+            catch (e) {
+                alert(&quot;抱歉，您所使用的浏览器无法完成此操作。\n\n加入收藏失败，请进入新网站后使用Ctrl+D进行添加&quot;);
+            }
+        }
+    }
+&lt;/script&gt;
+</code></pre>
 
                         
                       </div>
@@ -599,10 +624,10 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
                 <div class="read-more clearfix">
                   <div class="more-left left">
                   
-                    <span class="date">2019/7/23</span>
+                    <span class="date">2019/7/16</span>
                     <span>posted in&nbsp;</span> 
           				  
-          					    <span class="posted-in"><a href='PHP.html'>PHP</a></span>
+          					    <span class="posted-in"><a href='Javascript.html'>Javascript</a></span>
           				   
                   </div>
                   <div class="more-right right">
@@ -616,26 +641,14 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
               </div><!-- article -->
         
 			<div class="article">
-                <a class="clearlink" href="996.html">
+                <a class="clearlink" href="15632578058179.html">
                 
-                  <h1>996名单列表</h1>
+                  <h1>Typora 0.9.9.7.6</h1>
                   <div class="a-content">
                       
                       <div class="a-content-text">
                         
-                        	<blockquote>
-<p>引用： <a href="https://github.com/996icu/996.ICU">https://github.com/996icu/996.ICU</a></p>
-</blockquote>
-
-<h2 id="toc_0">声明与注意事项</h2>
-
-<ul>
-<li>本仓库只在筛选出符合上述要求的PR后，在本页面作出展示。</li>
-<li>信息由众人贡献，请自行甄别真伪，并注意消息来源的时效性及公信力。</li>
-<li>同公司不同部门规定有可能不同，公司在名单中不代表该公司全部岗位存在该情况，仅供参考。</li>
-<li>如果您认为名单中的某公司不应属此列或存在被抹黑的情况，请提PR说明情况，核实后将会更正或删除。</li>
-</ul>
-
+                        	<p><code>极简Markdown编辑器</code>  这款软件可以直观的看到源部分和预览部分，非常的方便。<br/>
 
                         
                       </div>
@@ -643,11 +656,11 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
                 </a>
                 <div class="read-more clearfix">
                   <div class="more-left left">
-                   <a href="996.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/23</span>
+                   <a href="15632578058179.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/16</span>
                     <span>posted in&nbsp;</span> 
           				  
-          					    <span class="posted-in"><a href='%E9%9A%8F%E7%AC%94.html'>随笔</a></span>
+          					    <span class="posted-in"><a href='%E8%BD%AF%E4%BB%B6%E6%8E%A8%E8%8D%90.html'>软件推荐</a></span>
           				   
                   </div>
                   <div class="more-right right">
@@ -740,19 +753,25 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
           	      
           		      
           			      <li class="post">
-          			        <a href="15632615375886.html">设为首页 收藏本站</a>
+          			        <a href="15639348696355.html">第二篇 Swoole Task 的应用</a>
           			      </li>
           		      
           		    
           		      
           			      <li class="post">
-          			        <a href="15632618037754.html">贫穷的本质</a>
+          			        <a href="996.html">996名单列表</a>
           			      </li>
           		      
           		    
           		      
           			      <li class="post">
-          			        <a href="15632578058179.html">Typora 0.9.9.7.6</a>
+          			        <a href="15638622569963.html">第一篇 Swoole Timer 的应用</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15638621513516.html">Swoole 文章汇总</a>
           			      </li>
           		      
           		    
@@ -762,10 +781,6 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
           			      </li>
           		      
           		    
-          		      
-          			      <li class="post">
-          			        <a href="15633721987028.html">算法面试通关40讲</a>
-          			      </li>
           		      
           		    
           		      
