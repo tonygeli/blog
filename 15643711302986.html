@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  算法面试通关40讲 - lilaiqun
+  第三篇 Swoole WebSocket 的应用 - lilaiqun
   
   </title>
   
@@ -139,14 +139,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>算法面试通关40讲</h1>
+          <h1>第三篇 Swoole WebSocket 的应用</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/7/17</span>
+          <span class="date">2019/7/24</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html'>极客时间</a></span>
+              <span class="posted-in"><a href='PHP.html'>PHP</a></span>
            
          
           <span class="comments">
@@ -159,16 +159,35 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <p>前Facebook工程师带你吃透大厂面试题<br/>
-覃超<br/>
-Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕士</p>
+      <span id="more"></span><!-- more -->
 
-<span id="more"></span><!-- more -->
+<blockquote>
+<p>转自：公众号 - 新亮笔记</p>
+</blockquote>
 
-<p><img src="http://images.lilaiqun.com/15633722288813.jpg" alt=""/></p>
+<h2 id="toc_0">概述</h2>
 
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
+<p>什么是 WebSocket ？</p>
+
+<blockquote>
+<p>WebSocket 是一种在单个TCP连接上进行全双工通信的协议。</p>
+</blockquote>
+
+<p>WebSocket 使得客户端和服务器之间的数据交换变得更加简单，允许服务端主动向客户端推送数据。</p>
+
+<p>在 WebSocket API 中，浏览器和服务器只需要完成一次握手，两者之间就直接可以创建持久性的连接，并进行双向数据传输。</p>
+
+<p>我们利用 WebSocket 进行及时通讯，今天实现一个 视频弹幕效果。</p>
+
+<p>实现弹幕其实就和群聊类似，将消息推送给所有的客户端，只不过前端的展示所有不同。</p>
+
+<p>本地版本：</p>
+
+<p>后端 PHP 7.2.6、Swoole 4.3.1。</p>
+
+<p>前端 HTML5 WebSocket、Canvas。</p>
+
+<p>废话不多说，先看效果。</p>
 
 
     
@@ -179,16 +198,16 @@ Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕�
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15633722743311.html" 
-          title="Previous Post: 深入浅出gRPC">&laquo; 深入浅出gRPC</a>
+          <a href="15644556452076.html" 
+          title="Previous Post: Excel制作二维码">&laquo; Excel制作二维码</a>
       
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15633721257544.html" 
-          title="Next Post: Linux性能优化实战">Linux性能优化实战 &raquo;</a>
+          <a  href="15639348696355.html" 
+          title="Next Post: 第二篇 Swoole Task 的应用">第二篇 Swoole Task 的应用 &raquo;</a>
       
       </p>
         </div>

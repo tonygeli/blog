@@ -1,0 +1,581 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  **面试官：给我讲一下分库分表方案** - lilaiqun
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="lilaiqun" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site:blog.lilaiqun.com ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?f61a1c2ead3150398a57d7afd7693f34";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        <li id=""><a target="_self" href="极客时间.html">极客时间</a></li>
+        
+        <li id=""><a target="_self" href="PHP.html">PHP</a></li>
+        
+        <li id=""><a target="_self" href="Javascript.html">Javascript</a></li>
+        
+        <li id=""><a target="_self" href="书籍推荐.html">书籍推荐</a></li>
+        
+        <li id=""><a target="_self" href="软件推荐.html">软件推荐</a></li>
+        
+        <li id=""><a target="_self" href="面试.html">面试</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="https://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; lilaiqun</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+        <li><a target="_self" href="极客时间.html">极客时间</a></li>
+        
+        <li><a target="_self" href="PHP.html">PHP</a></li>
+        
+        <li><a target="_self" href="Javascript.html">Javascript</a></li>
+        
+        <li><a target="_self" href="书籍推荐.html">书籍推荐</a></li>
+        
+        <li><a target="_self" href="软件推荐.html">软件推荐</a></li>
+        
+        <li><a target="_self" href="面试.html">面试</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E8%BD%AF%E4%BB%B6%E6%8E%A8%E8%8D%90.html">软件推荐</a></li>
+        
+            <li><a href="Javascript.html">Javascript</a></li>
+        
+            <li><a href="%E4%B9%A6%E7%B1%8D%E6%8E%A8%E8%8D%90.html">书籍推荐</a></li>
+        
+            <li><a href="%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html">极客时间</a></li>
+        
+            <li><a href="PHP.html">PHP</a></li>
+        
+            <li><a href="%E9%9A%8F%E7%AC%94.html">随笔</a></li>
+        
+            <li><a href="%E9%9D%A2%E8%AF%95.html">面试</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
+</script>
+<div class="row">
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>**面试官：给我讲一下分库分表方案**</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2019/8/2</span>
+
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='%E9%9D%A2%E8%AF%95.html'>面试</a></span>
+           
+         
+          <span class="comments">
+            
+
+            
+          </span>
+
+        </div>
+      </div><!-- article -->
+
+      <div class="article-content">
+      <span id="more"></span><!-- more -->
+
+<blockquote>
+<p>作者：尜尜人物<br/>
+  链接：<a href="https://www.cnblogs.com/littlecharacter/p/9342129.html">https://www.cnblogs.com/littlecharacter/p/9342129.html</a></p>
+</blockquote>
+
+<ul>
+<li>
+<a href="#toc_0">一、数据库瓶颈</a>
+<ul>
+<li>
+<a href="#toc_1">1、IO瓶颈</a>
+</li>
+<li>
+<a href="#toc_2">2、CPU瓶颈</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_3">二、分库分表</a>
+<ul>
+<li>
+<a href="#toc_4">1、水平分库</a>
+</li>
+<li>
+<a href="#toc_5">2、水平分表</a>
+</li>
+<li>
+<a href="#toc_6">3、垂直分库</a>
+</li>
+<li>
+<a href="#toc_7">4、垂直分表</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_8">三、分库分表工具</a>
+</li>
+<li>
+<a href="#toc_9">四、分库分表步骤</a>
+</li>
+<li>
+<a href="#toc_10">五、分库分表问题</a>
+<ul>
+<li>
+<a href="#toc_11">1. 非partition key的查询问题（水平分库分表，拆分策略为常用的hash法）</a>
+</li>
+<li>
+<a href="#toc_12">2、非partition key跨库跨表分页查询问题（水平分库分表，拆分策略为常用的hash法）</a>
+</li>
+<li>
+<a href="#toc_13">3、扩容问题（水平分库分表，拆分策略为常用的hash法）</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_14">六、分库分表总结</a>
+</li>
+<li>
+<a href="#toc_15">七、分库分表示例</a>
+</li>
+</ul>
+
+
+<h2 id="toc_0">一、数据库瓶颈</h2>
+
+<p>不管是IO瓶颈，还是CPU瓶颈，最终都会导致数据库的活跃连接数增加，进而逼近甚至达到数据库可承载活跃连接数的阈值。在业务Service来看就是，可用数据库连接少甚至无连接可用。接下来就可以想象了吧（并发量、吞吐量、崩溃）。</p>
+
+<h3 id="toc_1">1、IO瓶颈</h3>
+
+<p>第一种：磁盘读IO瓶颈，热点数据太多，数据库缓存放不下，每次查询时会产生大量的IO，降低查询速度 -&gt; 分库和垂直分表。<br/>
+第二种：网络IO瓶颈，请求的数据太多，网络带宽不够 -&gt; 分库。</p>
+
+<h3 id="toc_2">2、CPU瓶颈</h3>
+
+<p>第一种：SQL问题，如SQL中包含join，group by，order by，非索引字段条件查询等，增加CPU运算的操作 -&gt; SQL优化，建立合适的索引，在业务Service层进行业务计算。<br/>
+第二种：单表数据量太大，查询时扫描的行太多，SQL效率低，CPU率先出现瓶颈 -&gt; 水平分表。</p>
+
+<h2 id="toc_3">二、分库分表</h2>
+
+<h3 id="toc_4">1、水平分库</h3>
+
+<p><img src="http://images.lilaiqun.com/15647137481060.jpg" alt=""/></p>
+
+<ol>
+<li><p>概念：以字段为依据，按照一定策略（hash、range等），将一个库中的数据拆分到多个库中。</p></li>
+<li><p>结果：</p></li>
+<li><p>每个库的结构都一样；</p></li>
+<li><p>每个库的数据都不一样，没有交集；</p></li>
+<li><p>所有库的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量上来了，分表难以根本上解决问题，并且还没有明显的业务归属来垂直分库。</p></li>
+<li><p>分析：库多了，io和cpu的压力自然可以成倍缓解。</p></li>
+</ol>
+
+<h3 id="toc_5">2、水平分表</h3>
+
+<p><img src="http://images.lilaiqun.com/15647137986218.jpg" alt=""/></p>
+
+<ol>
+<li><p>概念：以字段为依据，按照一定策略（hash、range等），将一个表中的数据拆分到多个表中。</p></li>
+<li><p>结果：<br/>
+每个表的结构都一样；<br/>
+每个表的数据都不一样，没有交集；<br/>
+所有表的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量并没有上来，只是单表的数据量太多，影响了SQL效率，加重了CPU负担，以至于成为瓶颈。</p></li>
+<li><p>分析：表的数据量少了，单次SQL执行效率高，自然减轻了CPU的负担。</p></li>
+</ol>
+
+<h3 id="toc_6">3、垂直分库</h3>
+
+<p><img src="http://images.lilaiqun.com/15647138213351.jpg" alt=""/></p>
+
+<ol>
+<li>概念：以表为依据，按照业务归属不同，将不同的表拆分到不同的库中。</li>
+<li>结果：</li>
+<li>每个库的结构都不一样；</li>
+<li>每个库的数据也不一样，没有交集；</li>
+<li><p>所有库的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量上来了，并且可以抽象出单独的业务模块。</p></li>
+<li><p>分析：到这一步，基本上就可以服务化了。例如，随着业务的发展一些公用的配置表、字典表等越来越多，这时可以将这些表拆到单独的库中，甚至可以服务化。再有，随着业务的发展孵化出了一套业务模式，这时可以将相关的表拆到单独的库中，甚至可以服务化。</p></li>
+</ol>
+
+<h3 id="toc_7">4、垂直分表</h3>
+
+<p><img src="http://images.lilaiqun.com/15647138576584.jpg" alt=""/></p>
+
+<ol>
+<li><p>概念：以字段为依据，按照字段的活跃性，将表中字段拆到不同的表（主表和扩展表）中。</p></li>
+<li><p>结果：</p></li>
+<li><p>每个表的结构都不一样；</p></li>
+<li><p>每个表的数据也不一样，一般来说，每个表的字段至少有一列交集，一般是主键，用于关联数据；</p></li>
+<li><p>所有表的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量并没有上来，表的记录并不多，但是字段多，并且热点数据和非热点数据在一起，单行数据所需的存储空间较大。以至于数据库缓存的数据行减少，查询时会去读磁盘数据产生大量的随机读IO，产生IO瓶颈。</p></li>
+<li><p>分析：可以用列表页和详情页来帮助理解。垂直分表的拆分原则是将热点数据（可能会冗余经常一起查询的数据）放在一起作为主表，非热点数据放在一起作为扩展表。这样更多的热点数据就能被缓存下来，进而减少了随机读IO。拆了之后，要想获得全部数据就需要关联两个表来取数据。但记住，千万别用join，因为join不仅会增加CPU负担并且会讲两个表耦合在一起（必须在一个数据库实例上）。关联数据，应该在业务Service层做文章，分别获取主表和扩展表数据然后用关联字段关联得到全部数据。</p></li>
+</ol>
+
+<h2 id="toc_8">三、分库分表工具</h2>
+
+<ol>
+<li>sharding-sphere：jar，前身是sharding-jdbc；</li>
+<li>TDDL：jar，Taobao Distribute Data Layer；</li>
+<li>Mycat：中间件。</li>
+</ol>
+
+<p>注：工具的利弊，请自行调研，官网和社区优先。</p>
+
+<h2 id="toc_9">四、分库分表步骤</h2>
+
+<p>根据容量（当前容量和增长量）评估分库或分表个数 -&gt; 选key（均匀）-&gt; 分表规则（hash或range等）-&gt; 执行（一般双写）-&gt; 扩容问题（尽量减少数据的移动）。</p>
+
+<h2 id="toc_10">五、分库分表问题</h2>
+
+<h3 id="toc_11">1. 非partition key的查询问题（水平分库分表，拆分策略为常用的hash法）</h3>
+
+<p>除了partition key只有一个非partition key作为条件查询</p>
+
+<p><strong>映射法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140231654.jpg" alt=""/></p>
+
+<p><strong>基因法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140318991.jpg" alt=""/></p>
+
+<p>注：写入时，基因法生成user_id，如图。关于xbit基因，例如要分8张表，23=8，故x取3，即3bit基因。根据user_id查询时可直接取模路由到对应的分库或分表。根据user_name查询时，先通过user_name_code生成函数生成user_name_code再对其取模路由到对应的分库或分表。id生成常用<strong>snowflake算法</strong>。</p>
+
+<ol>
+<li>端上除了partition key不止一个非partition key作为条件查询</li>
+</ol>
+
+<p><strong>映射法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140607030.jpg" alt=""/></p>
+
+<p><strong>冗余法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140694844.jpg" alt=""/></p>
+
+<p>注：按照order_id或buyer_id查询时路由到db_o_buyer库中，按照seller_id查询时路由到db_o_seller库中。感觉有点本末倒置！有其他好的办法吗？改变技术栈呢？</p>
+
+<p>3、后台除了partition key还有各种非partition key组合条件查询</p>
+
+<p><strong>NoSQL法</strong><br/>
+<img src="http://images.lilaiqun.com/15647150946637.jpg" alt=""/></p>
+
+<p><strong>冗余法</strong><br/>
+<img src="http://images.lilaiqun.com/15647151004264.jpg" alt=""/></p>
+
+<h3 id="toc_12">2、非partition key跨库跨表分页查询问题（水平分库分表，拆分策略为常用的hash法）</h3>
+
+<p>注：用NoSQL法解决（ES等）。</p>
+
+<h3 id="toc_13">3、扩容问题（水平分库分表，拆分策略为常用的hash法）</h3>
+
+<p>1、水平扩容库（升级从库法<br/>
+<img src="http://images.lilaiqun.com/15647151413436.jpg" alt=""/></p>
+
+<p>注：扩容是成倍的。</p>
+
+<p>2、水平扩容表（双写迁移法）<br/>
+<img src="http://images.lilaiqun.com/15647151512396.jpg" alt=""/></p>
+
+<p>第一步：（同步双写）应用配置双写，部署；<br/>
+第二步：（同步双写）将老库中的老数据复制到新库中；<br/>
+第三步：（同步双写）以老库为准校对新库中的老数据；<br/>
+第四步：（同步双写）应用去掉双写，部署；</p>
+
+<p>注：双写是通用方案。</p>
+
+<h2 id="toc_14">六、分库分表总结</h2>
+
+<p>分库分表，首先得知道瓶颈在哪里，然后才能合理地拆分（分库还是分表？水平还是垂直？分几个？）。且不可为了分库分表而拆分。</p>
+
+<p>1、选key很重要，既要考虑到拆分均匀，也要考虑到非partition key的查询。<br/>
+2、只要能满足需求，拆分规则越简单越好。</p>
+
+<h2 id="toc_15">七、分库分表示例</h2>
+
+<p>示例GitHub地址：<a href="https://github.com/littlecharacter4s/study-sharding">https://github.com/littlecharacter4s/study-sharding</a></p>
+
+
+    
+
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="15644556452076.html" 
+          title="Next Post: Excel制作二维码">Excel制作二维码 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
+
+
+
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <div class="site-a-logo"><img src="http://images.lilaiqun.com/wukong.jpg" /></div>
+            
+                <h1>lilaiqun</h1>
+                <div class="site-des">IT资源分享网站 <br/> blog.lilaiqun.com</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E8%BD%AF%E4%BB%B6%E6%8E%A8%E8%8D%90.html"><strong>软件推荐</strong></a>
+        
+            <a href="Javascript.html"><strong>Javascript</strong></a>
+        
+            <a href="%E4%B9%A6%E7%B1%8D%E6%8E%A8%E8%8D%90.html"><strong>书籍推荐</strong></a>
+        
+            <a href="%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html"><strong>极客时间</strong></a>
+        
+            <a href="PHP.html"><strong>PHP</strong></a>
+        
+            <a href="%E9%9A%8F%E7%AC%94.html"><strong>随笔</strong></a>
+        
+            <a href="%E9%9D%A2%E8%AF%95.html"><strong>面试</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                  <ul class="posts-list">
+          	      
+          		      
+          			      <li class="post">
+          			        <a href="15647135075311.html">**面试官：给我讲一下分库分表方案**</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15644556452076.html">Excel制作二维码</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15643711302986.html">第三篇 Swoole WebSocket 的应用</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15639348696355.html">第二篇 Swoole Task 的应用</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15638622569963.html">第一篇 Swoole Timer 的应用</a>
+          			      </li>
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		    
+          		      
+          		     
+          		  	</ul>
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>FRIEND LINK</h2>
+                </div>
+                <div class="side-content">
+                  <ul class="cat-list">
+                    <a href="http://www.coolcourse.cn/"><strong>CoolCourse</strong></a>
+                  </ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2019
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    
+
+
+
+  </body>
+</html>

@@ -4,13 +4,291 @@
   <title><![CDATA[lilaiqun]]></title>
   <link href="blog.lilaiqun.com/atom.xml" rel="self"/>
   <link href="blog.lilaiqun.com/"/>
-  <updated>2019-07-24T10:00:12+08:00</updated>
+  <updated>2019-08-02T11:08:00+08:00</updated>
   <id>blog.lilaiqun.com/</id>
   <author>
     <name><![CDATA[]]></name>
     
   </author>
   <generator uri="http://www.mweb.im/">MWeb</generator>
+  
+  <entry>
+    <title type="html"><![CDATA[**面试官：给我讲一下分库分表方案**]]></title>
+    <link href="blog.lilaiqun.com/15647135075311.html"/>
+    <updated>2019-08-02T10:38:27+08:00</updated>
+    <id>blog.lilaiqun.com/15647135075311.html</id>
+    <content type="html"><![CDATA[
+<span id="more"></span><!-- more -->
+
+<blockquote>
+<p>作者：尜尜人物<br/>
+  链接：<a href="https://www.cnblogs.com/littlecharacter/p/9342129.html">https://www.cnblogs.com/littlecharacter/p/9342129.html</a></p>
+</blockquote>
+
+<ul>
+<li>
+<a href="#toc_0">一、数据库瓶颈</a>
+<ul>
+<li>
+<a href="#toc_1">1、IO瓶颈</a>
+</li>
+<li>
+<a href="#toc_2">2、CPU瓶颈</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_3">二、分库分表</a>
+<ul>
+<li>
+<a href="#toc_4">1、水平分库</a>
+</li>
+<li>
+<a href="#toc_5">2、水平分表</a>
+</li>
+<li>
+<a href="#toc_6">3、垂直分库</a>
+</li>
+<li>
+<a href="#toc_7">4、垂直分表</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_8">三、分库分表工具</a>
+</li>
+<li>
+<a href="#toc_9">四、分库分表步骤</a>
+</li>
+<li>
+<a href="#toc_10">五、分库分表问题</a>
+<ul>
+<li>
+<a href="#toc_11">1. 非partition key的查询问题（水平分库分表，拆分策略为常用的hash法）</a>
+</li>
+<li>
+<a href="#toc_12">2、非partition key跨库跨表分页查询问题（水平分库分表，拆分策略为常用的hash法）</a>
+</li>
+<li>
+<a href="#toc_13">3、扩容问题（水平分库分表，拆分策略为常用的hash法）</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_14">六、分库分表总结</a>
+</li>
+<li>
+<a href="#toc_15">七、分库分表示例</a>
+</li>
+</ul>
+
+
+<h2 id="toc_0">一、数据库瓶颈</h2>
+
+<p>不管是IO瓶颈，还是CPU瓶颈，最终都会导致数据库的活跃连接数增加，进而逼近甚至达到数据库可承载活跃连接数的阈值。在业务Service来看就是，可用数据库连接少甚至无连接可用。接下来就可以想象了吧（并发量、吞吐量、崩溃）。</p>
+
+<h3 id="toc_1">1、IO瓶颈</h3>
+
+<p>第一种：磁盘读IO瓶颈，热点数据太多，数据库缓存放不下，每次查询时会产生大量的IO，降低查询速度 -&gt; 分库和垂直分表。<br/>
+第二种：网络IO瓶颈，请求的数据太多，网络带宽不够 -&gt; 分库。</p>
+
+<h3 id="toc_2">2、CPU瓶颈</h3>
+
+<p>第一种：SQL问题，如SQL中包含join，group by，order by，非索引字段条件查询等，增加CPU运算的操作 -&gt; SQL优化，建立合适的索引，在业务Service层进行业务计算。<br/>
+第二种：单表数据量太大，查询时扫描的行太多，SQL效率低，CPU率先出现瓶颈 -&gt; 水平分表。</p>
+
+<h2 id="toc_3">二、分库分表</h2>
+
+<h3 id="toc_4">1、水平分库</h3>
+
+<p><img src="http://images.lilaiqun.com/15647137481060.jpg" alt=""/></p>
+
+<ol>
+<li><p>概念：以字段为依据，按照一定策略（hash、range等），将一个库中的数据拆分到多个库中。</p></li>
+<li><p>结果：</p></li>
+<li><p>每个库的结构都一样；</p></li>
+<li><p>每个库的数据都不一样，没有交集；</p></li>
+<li><p>所有库的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量上来了，分表难以根本上解决问题，并且还没有明显的业务归属来垂直分库。</p></li>
+<li><p>分析：库多了，io和cpu的压力自然可以成倍缓解。</p></li>
+</ol>
+
+<h3 id="toc_5">2、水平分表</h3>
+
+<p><img src="http://images.lilaiqun.com/15647137986218.jpg" alt=""/></p>
+
+<ol>
+<li><p>概念：以字段为依据，按照一定策略（hash、range等），将一个表中的数据拆分到多个表中。</p></li>
+<li><p>结果：<br/>
+每个表的结构都一样；<br/>
+每个表的数据都不一样，没有交集；<br/>
+所有表的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量并没有上来，只是单表的数据量太多，影响了SQL效率，加重了CPU负担，以至于成为瓶颈。</p></li>
+<li><p>分析：表的数据量少了，单次SQL执行效率高，自然减轻了CPU的负担。</p></li>
+</ol>
+
+<h3 id="toc_6">3、垂直分库</h3>
+
+<p><img src="http://images.lilaiqun.com/15647138213351.jpg" alt=""/></p>
+
+<ol>
+<li>概念：以表为依据，按照业务归属不同，将不同的表拆分到不同的库中。</li>
+<li>结果：</li>
+<li>每个库的结构都不一样；</li>
+<li>每个库的数据也不一样，没有交集；</li>
+<li><p>所有库的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量上来了，并且可以抽象出单独的业务模块。</p></li>
+<li><p>分析：到这一步，基本上就可以服务化了。例如，随着业务的发展一些公用的配置表、字典表等越来越多，这时可以将这些表拆到单独的库中，甚至可以服务化。再有，随着业务的发展孵化出了一套业务模式，这时可以将相关的表拆到单独的库中，甚至可以服务化。</p></li>
+</ol>
+
+<h3 id="toc_7">4、垂直分表</h3>
+
+<p><img src="http://images.lilaiqun.com/15647138576584.jpg" alt=""/></p>
+
+<ol>
+<li><p>概念：以字段为依据，按照字段的活跃性，将表中字段拆到不同的表（主表和扩展表）中。</p></li>
+<li><p>结果：</p></li>
+<li><p>每个表的结构都不一样；</p></li>
+<li><p>每个表的数据也不一样，一般来说，每个表的字段至少有一列交集，一般是主键，用于关联数据；</p></li>
+<li><p>所有表的并集是全量数据；</p></li>
+<li><p>场景：系统绝对并发量并没有上来，表的记录并不多，但是字段多，并且热点数据和非热点数据在一起，单行数据所需的存储空间较大。以至于数据库缓存的数据行减少，查询时会去读磁盘数据产生大量的随机读IO，产生IO瓶颈。</p></li>
+<li><p>分析：可以用列表页和详情页来帮助理解。垂直分表的拆分原则是将热点数据（可能会冗余经常一起查询的数据）放在一起作为主表，非热点数据放在一起作为扩展表。这样更多的热点数据就能被缓存下来，进而减少了随机读IO。拆了之后，要想获得全部数据就需要关联两个表来取数据。但记住，千万别用join，因为join不仅会增加CPU负担并且会讲两个表耦合在一起（必须在一个数据库实例上）。关联数据，应该在业务Service层做文章，分别获取主表和扩展表数据然后用关联字段关联得到全部数据。</p></li>
+</ol>
+
+<h2 id="toc_8">三、分库分表工具</h2>
+
+<ol>
+<li>sharding-sphere：jar，前身是sharding-jdbc；</li>
+<li>TDDL：jar，Taobao Distribute Data Layer；</li>
+<li>Mycat：中间件。</li>
+</ol>
+
+<p>注：工具的利弊，请自行调研，官网和社区优先。</p>
+
+<h2 id="toc_9">四、分库分表步骤</h2>
+
+<p>根据容量（当前容量和增长量）评估分库或分表个数 -&gt; 选key（均匀）-&gt; 分表规则（hash或range等）-&gt; 执行（一般双写）-&gt; 扩容问题（尽量减少数据的移动）。</p>
+
+<h2 id="toc_10">五、分库分表问题</h2>
+
+<h3 id="toc_11">1. 非partition key的查询问题（水平分库分表，拆分策略为常用的hash法）</h3>
+
+<p>除了partition key只有一个非partition key作为条件查询</p>
+
+<p><strong>映射法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140231654.jpg" alt=""/></p>
+
+<p><strong>基因法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140318991.jpg" alt=""/></p>
+
+<p>注：写入时，基因法生成user_id，如图。关于xbit基因，例如要分8张表，23=8，故x取3，即3bit基因。根据user_id查询时可直接取模路由到对应的分库或分表。根据user_name查询时，先通过user_name_code生成函数生成user_name_code再对其取模路由到对应的分库或分表。id生成常用<strong>snowflake算法</strong>。</p>
+
+<ol>
+<li>端上除了partition key不止一个非partition key作为条件查询</li>
+</ol>
+
+<p><strong>映射法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140607030.jpg" alt=""/></p>
+
+<p><strong>冗余法</strong><br/>
+<img src="http://images.lilaiqun.com/15647140694844.jpg" alt=""/></p>
+
+<p>注：按照order_id或buyer_id查询时路由到db_o_buyer库中，按照seller_id查询时路由到db_o_seller库中。感觉有点本末倒置！有其他好的办法吗？改变技术栈呢？</p>
+
+<p>3、后台除了partition key还有各种非partition key组合条件查询</p>
+
+<p><strong>NoSQL法</strong><br/>
+<img src="http://images.lilaiqun.com/15647150946637.jpg" alt=""/></p>
+
+<p><strong>冗余法</strong><br/>
+<img src="http://images.lilaiqun.com/15647151004264.jpg" alt=""/></p>
+
+<h3 id="toc_12">2、非partition key跨库跨表分页查询问题（水平分库分表，拆分策略为常用的hash法）</h3>
+
+<p>注：用NoSQL法解决（ES等）。</p>
+
+<h3 id="toc_13">3、扩容问题（水平分库分表，拆分策略为常用的hash法）</h3>
+
+<p>1、水平扩容库（升级从库法<br/>
+<img src="http://images.lilaiqun.com/15647151413436.jpg" alt=""/></p>
+
+<p>注：扩容是成倍的。</p>
+
+<p>2、水平扩容表（双写迁移法）<br/>
+<img src="http://images.lilaiqun.com/15647151512396.jpg" alt=""/></p>
+
+<p>第一步：（同步双写）应用配置双写，部署；<br/>
+第二步：（同步双写）将老库中的老数据复制到新库中；<br/>
+第三步：（同步双写）以老库为准校对新库中的老数据；<br/>
+第四步：（同步双写）应用去掉双写，部署；</p>
+
+<p>注：双写是通用方案。</p>
+
+<h2 id="toc_14">六、分库分表总结</h2>
+
+<p>分库分表，首先得知道瓶颈在哪里，然后才能合理地拆分（分库还是分表？水平还是垂直？分几个？）。且不可为了分库分表而拆分。</p>
+
+<p>1、选key很重要，既要考虑到拆分均匀，也要考虑到非partition key的查询。<br/>
+2、只要能满足需求，拆分规则越简单越好。</p>
+
+<h2 id="toc_15">七、分库分表示例</h2>
+
+<p>示例GitHub地址：<a href="https://github.com/littlecharacter4s/study-sharding">https://github.com/littlecharacter4s/study-sharding</a></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Excel制作二维码]]></title>
+    <link href="blog.lilaiqun.com/15644556452076.html"/>
+    <updated>2019-07-30T11:00:45+08:00</updated>
+    <id>blog.lilaiqun.com/15644556452076.html</id>
+    <content type="html"><![CDATA[
+<span id="more"></span><!-- more -->
+
+<p><img src="http://images.lilaiqun.com/Excel%E5%88%B6%E4%BD%9C%E4%BA%8C%E7%BB%B4%E7%A0%81.png" alt="Excel制作二维码"/></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[第三篇 Swoole WebSocket 的应用]]></title>
+    <link href="blog.lilaiqun.com/15643711302986.html"/>
+    <updated>2019-07-29T11:32:10+08:00</updated>
+    <id>blog.lilaiqun.com/15643711302986.html</id>
+    <content type="html"><![CDATA[
+<span id="more"></span><!-- more -->
+
+<blockquote>
+<p>转自：公众号 - 新亮笔记</p>
+</blockquote>
+
+<h2 id="toc_0">概述</h2>
+
+<p>什么是 WebSocket ？</p>
+
+<blockquote>
+<p>WebSocket 是一种在单个TCP连接上进行全双工通信的协议。</p>
+</blockquote>
+
+<p>WebSocket 使得客户端和服务器之间的数据交换变得更加简单，允许服务端主动向客户端推送数据。</p>
+
+<p>在 WebSocket API 中，浏览器和服务器只需要完成一次握手，两者之间就直接可以创建持久性的连接，并进行双向数据传输。</p>
+
+<p>我们利用 WebSocket 进行及时通讯，今天实现一个 视频弹幕效果。</p>
+
+<p>实现弹幕其实就和群聊类似，将消息推送给所有的客户端，只不过前端的展示所有不同。</p>
+
+<p>本地版本：</p>
+
+<p>后端 PHP 7.2.6、Swoole 4.3.1。</p>
+
+<p>前端 HTML5 WebSocket、Canvas。</p>
+
+<p>废话不多说，先看效果。</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[第二篇 Swoole Task 的应用]]></title>
@@ -264,1356 +542,6 @@ manager进程：4259</p>
 <li>Server-&gt;taskWaitMulti</li>
 <li>Server-&gt;taskCo</li>
 </ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[996名单列表]]></title>
-    <link href="blog.lilaiqun.com/996.html"/>
-    <updated>2019-07-23T14:40:18+08:00</updated>
-    <id>blog.lilaiqun.com/996.html</id>
-    <content type="html"><![CDATA[
-<blockquote>
-<p>引用： <a href="https://github.com/996icu/996.ICU">https://github.com/996icu/996.ICU</a></p>
-</blockquote>
-
-<h2 id="toc_0">声明与注意事项</h2>
-
-<ul>
-<li>本仓库只在筛选出符合上述要求的PR后，在本页面作出展示。</li>
-<li>信息由众人贡献，请自行甄别真伪，并注意消息来源的时效性及公信力。</li>
-<li>同公司不同部门规定有可能不同，公司在名单中不代表该公司全部岗位存在该情况，仅供参考。</li>
-<li>如果您认为名单中的某公司不应属此列或存在被抹黑的情况，请提PR说明情况，核实后将会更正或删除。</li>
-</ul>
-
-<span id="more"></span><!-- more -->
-
-<hr/>
-
-<table>
-<thead>
-<tr>
-<th style="text-align: center">所在城市</th>
-<th style="text-align: center">公司名字</th>
-<th style="text-align: center">曝光/施行时间</th>
-<th style="text-align: center">制度描述</th>
-<th style="text-align: center">证据内容</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.bthome.com/">百安居</a></td>
-<td style="text-align: center">2019年6月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">领导口头描述</td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.pinduoduo.com//">拼多多</a></td>
-<td style="text-align: center">2019年2月</td>
-<td style="text-align: center">11116、两班倒</td>
-<td style="text-align: center"><a href="http://www.taobao92.com/thread-1313-1-1.html">996还不敷，拼多多又玩两班倒，员工大喊：比富士康还狠</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="http://www.shengheyouxi.com">盛赫游戏</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="https://www.zhipin.com/gongsi/c57418b66b0cf3bf0nd52928.html?ka=brand_list_company_9">boss直聘</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://m.eyee.com/">砸立</a></td>
-<td style="text-align: center">2019年1月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5728610tl526.html?ka=review-label2">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.youzu.com/">游族网络</a></td>
-<td style="text-align: center">2018年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/22411680?sort=created">你为什么从游族离职?-知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="http://hoodinn.hgame.com/default/index">蝴蝶互动</a></td>
-<td style="text-align: center">2019年2月</td>
-<td style="text-align: center">966</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/40858342/answer/616999472">知乎：如何评价蝴蝶互动？</a> / <a href="img/%E8%9D%B4%E8%9D%B6%E4%BA%92%E5%8A%A8-%E8%81%8A%E5%A4%A9%E8%AE%B0%E5%BD%95.png">聊天记录截图</a> / (<a href="img/%E8%9D%B4%E8%9D%B6%E4%BA%92%E5%8A%A8-%E6%8A%A5%E5%91%8A%E5%A7%94%E6%89%98%E6%88%AA%E5%9B%BE-0.jpg">所受委&gt;托资料-0</a>  <a href="img/%E8%9D%B4%E8%9D%B6%E4%BA%92%E5%8A%A8-%E6%8A%A5%E5%91%8A%E5%A7%94%E6%89%98%E6%88%AA%E5%9B%BE-1.jpg">所受委托资料-1</a>)</td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.united-imaging.com/cn/home/">上海联影医疗科技有限公司</a></td>
-<td style="text-align: center">2019年4月4日</td>
-<td style="text-align: center">996、无加班费</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6045694.html">看准网</a>、 <a href="https://bbs.csdn.net/topics/380214818">CSDN</a>、<a href="https://www.kanzhun.com/pl6212987.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="http://www.yitutech.com/">依图网络科技有限公司</a></td>
-<td style="text-align: center">2019年4月5日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/300132949/answer/606529193">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.ele.me/">饿了么</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996 or 997</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1879439.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.deppon.com/">德邦物流</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr16378tl56.html?ka=review-label9">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="www.cibfintech.com/">兴业数字金融服务</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr6355543tl526.html?ka=review-label4">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.xiaohongshu.com/">小红书</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">1095</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1950189.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.yitutech.com/">依图科技</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1669492tl526.html?ka=review-label13">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.yimidida.com">上海壹米滴答供应链管理有限公司</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="img/yimidida.jpeg">壹米滴答日历</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.kwm.com/zh/cn">金杜律师事务所</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">早10晚6但基本9点以后下班，周末给任务，请假给任务</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr14366.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.yupaopao.com//">上海鱼泡泡信息科技有限公司</a></td>
-<td style="text-align: center">2018年12月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://maimai.cn/web/gossip_detail?encode_id=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MjA4NjEwNjcsImlhdCI6MTU1NDk1MDU0OX0.Hd0uP3y9GMnN1OA8fhV0xvCQKT-GBQ33BzUmT1CCavk">脉脉</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.zhangmen.com/">掌门一对一教育有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl7018849.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://www.qiniu.com/">七牛云</a></td>
-<td style="text-align: center">2018年11月</td>
-<td style="text-align: center">995、裁员</td>
-<td style="text-align: center"><a href="img/%E4%B8%83%E7%89%9B%E4%BA%91995.jpg">Boss直聘</a>、<a href="img/%E4%B8%83%E7%89%9B%E4%BA%91%E8%A3%81%E5%91%981.jpg">脉脉</a>、<a href="img/%E4%B8%83%E7%89%9B%E4%BA%91%E8%A3%81%E5%91%982.jpg">脉脉</a>、<a href="img/%E4%B8%83%E7%89%9B%E4%BA%91%E8%A3%81%E5%91%983.jpg">脉脉</a>、<a href="https://www.kanzhun.com/pl7147841.html?ka=comreview-result1">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="https://linjia.me">邻趣网络有限公司</a></td>
-<td style="text-align: center">2018年9月</td>
-<td style="text-align: center">995</td>
-<td style="text-align: center">七点左右下班要在群里报备 <a href="img/%E9%82%BB%E8%B6%A3%E5%B7%A5%E4%BD%9C%E7%BE%A4%E6%88%AA%E5%9B%BE.jpeg">工作群截图1</a> <a href="img/%E9%82%BB%E8%B6%A3%E5%B7%A5%E4%BD%9C%E7%BE%A4%E6%88%AA%E5%9B%BE2.jpeg">工作群截图2</a> <a href="img/%E9%82%BB%E8%B6%A3%E5%B7%A5%E4%BD%9C%E7%BE%A4%E6%88%AA%E5%9B%BE3.jpeg">工作群截图3</a></td>
-</tr>
-<tr>
-<td style="text-align: center">东莞</td>
-<td style="text-align: center"><a href="www.gdbbk.com/">步步高</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">8106 ！</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr3153tl56.html?ka=review-label12">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">佛山</td>
-<td style="text-align: center"><a href="https://www.midea.cn/">美的集团</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996大小周</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr7884tl56.html?ka=review-label14">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.jd.com">京东</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">995</td>
-<td style="text-align: center"><a href="http://tech.163.com/19/0312/13/EA2QGIOK00097U7R.html">京东回应995工作制：不会强制要求 但要全情投入</a><br><a href="https://i.loli.net/2019/04/02/5ca2e8727f213.jpg">刘强东内部邮件称要淘汰或协商解决掉“三种人”</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.58.com">58同城</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="http://finance.cnr.cn/gs/20160901/t20160901_523105136.shtml">58同城实行全员996工作制 被指意图逼员工主动辞职</a><br><a href="https://www.kanzhun.com/gsr10329.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.tujia.com">途家网</a></td>
-<td style="text-align: center">2017年12月</td>
-<td style="text-align: center">897</td>
-<td style="text-align: center"><a href="https://www.tujia.xyz/">暴力裁员、996加班、发感冒冲剂、搭睡觉帐篷、诉讼材料</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.missfresh.cn/">每日优鲜</a></td>
-<td style="text-align: center">-----</td>
-<td style="text-align: center">007/996</td>
-<td style="text-align: center"><a href="img/%E6%AF%8F%E6%97%A5%E4%BC%98%E9%B2%9C%E9%BC%93%E5%90%B9996.png">app更新记录,大肆鼓吹996</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://bytedance.com">字节跳动</a></td>
-<td style="text-align: center">2017年7月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5622411tl56.html">看准网1</a>、<a href="https://www.kanzhun.com/pl6583181.html">看准网2</a>、<a href="https://www.sohu.com/a/256795805_231667">搜狐</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.yonyou.com/">用友</a></td>
-<td style="text-align: center">2018年12月</td>
-<td style="text-align: center">997</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/26683235">在用友工作是怎样一番体验？ - 知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.sensorsdata.cn/">神策数据</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6409927.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.chinasofti.com/">中软国际</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://jobs.zhaopin.com/CC508620126J00303154805.htm">智联招聘</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.camelotchina.com/">柯莱特</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://jobs.zhaopin.com/CC120179637J00117070515.htm">智联招聘</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.git.com.cn/">高伟达</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://jobs.zhaopin.com/CC120702341J00114014810.htm">智联招聘</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://xin.baidu.com/detail/compinfo?pid=xlTM-TogKuTwdr2zNtf0Zpjhxx2gQd9FZQmd&amp;from=ps">霁云科技</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.zhipin.com/gongsi/2c08264377f4a5c61nx739i-Fw%7E%7E.html?ka=search_rcmd_company_2c08264377f4a5c61nx739i-Fw%7E%7E">boss直聘</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.keyware.com.cn/">北京关键科技股份有限公司</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">986</td>
-<td style="text-align: center">986且没加班费不能换休<a href="img/keyware1.jpg">图片-1</a><br><a href="img/keyware2.jpg">图片-2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.01zhuanche.com/">首约科技（北京）有限公司</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">工作日无加班费无调休、加班时长作为KPI评估标准</td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.zhipin.com/">Boss直聘(北京华品博睿网络技术有限公司)</a></td>
-<td style="text-align: center">2019年4月2日</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="https://upload.cc/i1/2019/04/03/1wfI7o.png">OFFER邮件(已处理图片和关键字过滤)</a> + 亲历</td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.uegame.com/">北京游奕互动软件有限公司</a></td>
-<td style="text-align: center">2016年3月</td>
-<td style="text-align: center">986</td>
-<td style="text-align: center">加班不给钱的那种，用这个来卡大家项目上线分红<a href="img/yyhd.png">打卡记录</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.mi.com">小米</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr347791.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.asiainfo.com">亚信(AsiaInfo)</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr19887tl56.html?ka=review-label13">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.liepin.com/">猎聘网</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1087027.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.baidu.com/">百度</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr11514tl56.html?ka=review-label17">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.bianlifeng.com/">便利蜂</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10105</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr6351491tl526.html?ka=review-label8">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.vipkid.com.cn/">VIPKID</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5616047tl56.html?ka=review-label14">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.tianyancha.com/">天眼查</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5681112tl526.html?ka=review-label4">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.qunar.com/">去哪儿网</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr61692tl56.html?ka=review-label13">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.yunniao.cn/">云鸟科技</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr2477689tl56.html?ka=review-label3">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="www.icourt.cc/">iCourt</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996 or 10116</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5731719tl526.html?ka=review-label5">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="www.chujian.com/">初见科技</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">995</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr2031621.html?ka=com1-review">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.zybang.com/">作业帮</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6288762.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.ishumei.com/">数美科技</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">大小周，加班</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/290696102">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.kfyao.com/">快方送药</a></td>
-<td style="text-align: center">已经施行一段时间了</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl5675303.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.kuaipeilian.com">快陪练</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://pic.superbed.cn/item/5cad617f3a213b0417f7cc2a">发言为其招聘经理</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.dhcc.com.cn/">东华软件股份公司</a></td>
-<td style="text-align: center">2018年2月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">亲历 <a href="https://koubei.baidu.com/s/xt.dhcc.com.cn?from=ps_pc1">百度口碑</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.trustlife.com/">信美人寿相互保险社</a></td>
-<td style="text-align: center">2019年</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5723919.html?ka=com-blocker1-review">看准网</a>、<a href="https://www.kanzhun.com/gsr6603074.html?ka=com1-review">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.cbct.cn/">北京中广创思文化传播有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996/9107</td>
-<td style="text-align: center"><a href="img/%E5%8C%97%E4%BA%AC%E4%B8%AD%E5%B9%BF%E5%88%9B%E6%80%9D9107%E9%92%89%E9%92%89%E6%88%AA%E5%9B%BE.jpg">图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://beijing.bitauto.com/">易车网</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="img/%E6%98%93%E8%BD%A6996.png">办公软件截图</a>、<a href="img/%E6%98%93%E8%BD%A6%E8%84%89%E8%84%89.png">脉脉</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://linkface.cn/">北京今始科技有限公司</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996、恶意裁员</td>
-<td style="text-align: center"><a href="img/linkface-996.jpg">邮件截图</a>、<a href="https://www.zhihu.com/question/300467880/answer/532121441">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.sumavision.com/">北京数码视讯科技股份有限公司</a></td>
-<td style="text-align: center">2011年4月</td>
-<td style="text-align: center">996，大小周</td>
-<td style="text-align: center">亲历 <a href="https://www.kanzhun.com/pl474513.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.soundai.com/">北京声智科技有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5680797tl526.html?ka=review-label1">看准网：包括 HR 全员996</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="https://www.danke.com/">蛋壳公寓</a></td>
-<td style="text-align: center">2018年7月</td>
-<td style="text-align: center">10106/10107</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsm5710300.html?ka=com-blocker1-interview#co_tab%EF%BC%89">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.mastertimes.net/">北京掌握时代科技股份有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl7093100.html?ka=review-item-ckqw">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">南京</td>
-<td style="text-align: center"><a href="http://www.suning.com">苏宁</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/314152843/answer/613149536">如何评价今年苏宁正式实行996工作制?</a></td>
-</tr>
-<tr>
-<td style="text-align: center">厦门</td>
-<td style="text-align: center"><a href="www.4399.com/">4399游戏</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr3284tl56.html?ka=review-label13">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">嘉兴/广州</td>
-<td style="text-align: center"><a href="http://www.chinalancoo.com">蓝鸽集团有限公司</a></td>
-<td style="text-align: center">2019年4月4日</td>
-<td style="text-align: center">每月仅加班需满50小时</td>
-<td style="text-align: center">曾经一个月加班60小时被喝茶、<a href="https://www.zhihu.com/question/40782949">知乎爆料</a>、<a href="https://tieba.baidu.com/f?kz=4421231059&amp;mo_device=1&amp;ssid=0&amp;from=844b&amp;uid=0&amp;pu=usm@2%7Csz@320_1001%7Cta@iphone_2_7.0_24_67.0&amp;bd_page_type=1&amp;baiduid=16C9EAE1D7D54FAC1A178F5882C9EBD3&amp;tj=h5_mobile_1_0_10_l4&amp;referer=m.baidu.com?pn=0&amp;">工资中的一半是要靠加班和绩效才能取得</a></td>
-</tr>
-<tr>
-<td style="text-align: center">大连</td>
-<td style="text-align: center"><a href="https://www.neusoft.com/cn/">大连东软集团</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">9106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl5758283.html?ka=review-item2">看准网</a>、<a href="https://www.kanzhun.com/pl5892120.html?ka=review-item10">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">大连</td>
-<td style="text-align: center"><a href="http://www.tfrunning.com.cn">大连同方软银科技股份有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl5661184.html?ka=review-item6">看准网</a>、<a href="https://www.kanzhun.com/pl7170642.html?ka=review-item-ckqw">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">天津</td>
-<td style="text-align: center"><a href="http://www.gwm.com.cn/">长城汽车股份有限公司天津园区</a></td>
-<td style="text-align: center">2019年3月28日</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="http://www.hljsxy.org.cn/website/sites/common/readwNews.aspx?JpkId=1&amp;id=13289">招聘简章</a></td>
-</tr>
-<tr>
-<td style="text-align: center">天津</td>
-<td style="text-align: center"><a href="https://blackfish.cn">小黑鱼</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://m.kanzhun.com/gsr6771936.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">天津</td>
-<td style="text-align: center"><a href="http://tideway.com.cn/">天津天地伟业科技有限公司</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">强制996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1634154tl56.html?ka=review-label11">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">天津</td>
-<td style="text-align: center"><a href="http://www.tjisv.com/">易思维(杭州/天津)科技有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6228054.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">太原</td>
-<td style="text-align: center"><a href="http://www.7zy.net/">辉讯网络技术有限公司</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">亲历 <a href="https://i.loli.net/2019/04/11/5cae537484b5d.jpg">考勤</a></td>
-</tr>
-<tr>
-<td style="text-align: center">山东淄博</td>
-<td style="text-align: center"><a href="http://www.imegaware.com/">山东兆物网络技术股份有限公司</a></td>
-<td style="text-align: center">2019年4月9日</td>
-<td style="text-align: center">8106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6588029.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="http://www.xiaopeng.com/">小鹏汽车(XPENG Motors)</a></td>
-<td style="text-align: center">2018年</td>
-<td style="text-align: center">大小周、大会战（996）、各部门的上班时间进行排名</td>
-<td style="text-align: center"><a href="https://raw.githubusercontent.com/xiaopeng996icu/996.ICU/2b01c57202351af334c157361ffe702d42765bbc/blacklist/img/%E5%B0%8F%E9%B9%8F%E6%B1%BD%E8%BD%A6.JPG">工作日程安排表</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="http://www.adjingyu.com/">鲸鱼游戏</a></td>
-<td style="text-align: center">2017年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://raw.githubusercontent.com/xuhaodong/img/master/196803444329033095.jpg">考勤</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="https://www.duoyi.com">多益网络</a></td>
-<td style="text-align: center">2018年3月</td>
-<td style="text-align: center">9106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1365983tl56.html">看准网</a>、<a href="https://www.zhihu.com/question/22713470/answer/145287600">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="https://game.163.com/">网易游戏</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr15379tl56.html?ka=review-label14">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="www.37wan.net/">三七互娱</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">9115 9116?</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1906275.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="https://www.9377.com">广州创思信息技术有限公司（9377 游戏）</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">大小周加班</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/53318899">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center"><a href="https://www.tap4fun.com/">tap4fun</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr59860tl56.html?ka=review-label15">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center"><a href="https://www.kanman.com/">成都二次元动漫有限公司</a></td>
-<td style="text-align: center">2018年12月1日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="img/ecy1.jpg">图片-1</a> <a href="img/ecy12.jpg">图片-2</a><a href="img/ecy4.jpg">图片-3</a> + 亲历</td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center"><a href="http://www.sobey.com/">成都索贝数码科技股份有限公司</a></td>
-<td style="text-align: center">2019年4月8日</td>
-<td style="text-align: center">996 无倒休</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl7169544.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">河北秦皇岛</td>
-<td style="text-align: center"><a href="https://www.neuqsoft.com/">河北东软软件有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">8.30-21,副总亲自回复邮件加班</td>
-<td style="text-align: center"><a href="img/%E6%B2%B3%E5%8C%97%E4%B8%9C%E8%BD%AF%E8%BD%AF%E4%BB%B6%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8%E7%94%B3%E8%AF%B7%E5%8A%A0%E7%8F%AD.png">邮件截图</a>,<a href="img/neuq_work_overtime_evidence2.jpg">微信聊天记录</a>,<a href="img/neuq_work_overtime_evidence3.jpg">微信聊天记录2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center"><a href="https://cdxfuture.com/xf/">成都未知未来科技有限公司</a></td>
-<td style="text-align: center">2018年12月</td>
-<td style="text-align: center">大小周、拖欠工资，裁员无补偿</td>
-<td style="text-align: center"><a href="img/xf%E5%91%A8%E5%85%AD%E5%8A%A0%E7%8F%AD%E9%80%9A%E7%9F%A5.png">周六加班</a>，<a href="img/xf%E6%8F%90%E9%86%92%E8%A1%A5%E5%8A%A0%E7%8F%AD.png">提醒补加班</a>，<a href="img/xf%E8%A2%AB%E8%A3%81%E5%91%98%E6%8B%96%E6%AC%A0%E8%96%AA%E8%B5%84.jpg">裁员后还拖欠工资</a>，<a href="img/xf%E5%8A%B3%E5%8A%A8%E4%BB%B2%E8%A3%81%E4%B9%A6.jpg">仲裁书</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.alibabagroup.com/">阿里巴巴</a></td>
-<td style="text-align: center">2018年6月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://kuaibao.qq.com/s/20180612A1FAPU00">阿里巴巴的996加班文化，看到这些恐怖数据，你也会辞职！</a><br><a href="http://m.sohu.com/a/307564633_241241">马云：996是修来的福报! 律师：涉嫌违法</a><br><a href="https://v.qq.com/x/page/h0860wwt0xl.html">马云：后悔忙于工作 没时间陪家人 有来生绝不这样</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.antfin.com/">蚂蚁金服</a></td>
-<td style="text-align: center">2018年11月</td>
-<td style="text-align: center">9106</td>
-<td style="text-align: center"><a href="https://t.cj.sina.com.cn/articles/view/6680234487/18e2c49f700100dq3q">阿里前员工吐槽：从蚂蚁金服离职了，真的拿员工当蚂蚁使</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.youzan.com">有赞</a></td>
-<td style="text-align: center">2019年1月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="http://www.linkshop.com.cn/web/archives/2019/418163.shtml">年会成了“鸿门宴”，这家公司“强制996”被员工举报</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.zhipin.com/gongsi/09aefd7a9d507c2f1nd82tu9Ew%7E%7E.html">智贝科技</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">强制996、歧视程序员</td>
-<td style="text-align: center"><a href="https://baijiahao.baidu.com/s?id=1627625016599313128">程序员吐槽：薪资低，996加班无补助，歧视程序员，这hr真乃神人</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="http://www.10jqka.com.cn/">同花顺</a></td>
-<td style="text-align: center">2018年12月</td>
-<td style="text-align: center">大小周、加班</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6896401.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.hikvision.com/cn/">杭州海康威视数字技术股份有限公司</a></td>
-<td style="text-align: center">2018年</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6448138.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.dahuatech.com/">浙江大华技术股份有限公司</a></td>
-<td style="text-align: center">2018年</td>
-<td style="text-align: center">加班</td>
-<td style="text-align: center"><a href="http://www.7360.cc/Review-80253">职业圈</a>，<a href="https://www.kanzhun.com/pl6360251.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="http://fenxiao.uniview.com/">浙江宇视科技有限公司</a></td>
-<td style="text-align: center">2018年</td>
-<td style="text-align: center">大小周加班</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsmsh10805642.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.kaola.com/">网易考拉海购</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5686940tl526.html?ka=review-label14">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="http://www.adyun.com/zh-cn/index.html">盘石信息科技有限公司</a></td>
-<td style="text-align: center">2018年11月12日</td>
-<td style="text-align: center">996/9106</td>
-<td style="text-align: center"><a href="img/%E6%B5%99%E6%B1%9F%E6%9D%AD%E5%B7%9E%E7%9B%98%E7%9F%B3%E4%BF%A1%E6%81%AF%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8996%E5%88%B6%E5%BA%A6.png">图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">武汉</td>
-<td style="text-align: center"><a href="http://www.i-xiaoma.com">武汉小码联城科技有限公司</a></td>
-<td style="text-align: center">2019年4月22日</td>
-<td style="text-align: center">995</td>
-<td style="text-align: center">年前年后各裁员一波<br><a href="img/%E5%B0%8F%E7%A0%81%E8%81%94%E5%9F%8E%E5%8A%A0%E7%8F%AD.png">钉钉截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">武汉</td>
-<td style="text-align: center"><a href="http://www.timing360.com/">氪细胞</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">名义上996，实际下班时间更晚<br><a href="img/timing360-0823.jpg">考勤日历</a><br><a href="img/timing360-1201.jpg">考勤规则</a></td>
-</tr>
-<tr>
-<td style="text-align: center">武汉</td>
-<td style="text-align: center"><a href="http://www.jc2008.com/">武汉精臣智慧标识科技有限公司</a></td>
-<td style="text-align: center">2018年9月</td>
-<td style="text-align: center">966</td>
-<td style="text-align: center"><a href="img/%E7%B2%BE%E8%87%A3%E6%99%BA%E6%85%A7-%E6%89%93%E5%8D%A1%E6%97%A5%E5%8E%86.jpg">考勤日历</a><br><a href="img/%E7%B2%BE%E8%87%A3%E6%99%BA%E6%85%A7-%E8%80%83%E5%8B%A4%E5%88%B6%E5%BA%A6-1.jpg">考勤制度-1</a></td>
-</tr>
-<tr>
-<td style="text-align: center">武汉</td>
-<td style="text-align: center"><a href="http://www.scotec.net/">武汉星云海数字科技股份有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="img/hxqc1.jpg">图片</a>、<a href="img/hxqc2.jpg">图片</a>、<a href="img/hxqc3.jpg">图片</a>、<a href="https://www.kanzhun.com/gso5662099.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">武汉</td>
-<td style="text-align: center"><a href="https://www.douyu.com/">武汉斗鱼网络科技有限公司</a></td>
-<td style="text-align: center">2018年9月</td>
-<td style="text-align: center">每天至少加班两小时，拖欠大量工资，无加班费</td>
-<td style="text-align: center"><a href="https://m.kanzhun.com/pl6708460.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">泰安</td>
-<td style="text-align: center"><a href="www.inspur.com/">浪潮软件</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">6 * 12 ！</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr49271tl56.html?ka=review-label10">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">济南</td>
-<td style="text-align: center"><a href="http://www.googosoft.com/">山东国子软件股份有限公司</a></td>
-<td style="text-align: center">2017年4月</td>
-<td style="text-align: center">886</td>
-<td style="text-align: center">加班补助说算在绩效中，时薪5块 : <a href="img/googosoft.png">加班表</a>、<a href="img/googosoft2.png">加班表</a>、<a href="https://www.kanzhun.com/pl6406106.html">看准网1</a>、<a href="https://www.kanzhun.com/gsr5619934tl56.html?ka=review-label4">看准网2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">济南</td>
-<td style="text-align: center"><a href="www.pansoft.com/">普联软件</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">8106</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr61725tl56.html?ka=review-label11">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.huawei.com/cn/">华为</a></td>
-<td style="text-align: center">2010年8月</td>
-<td style="text-align: center">9106</td>
-<td style="text-align: center"><a href="http://focus.news.163.com/10/0921/15/6H460OOP00011SM9.html">华为：“自愿”的奋斗者协议</a>(<a href="img/huawei.jpg">图片</a>)</td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.dji.com/cn">大疆创新</a></td>
-<td style="text-align: center">2018年12月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://baijiahao.baidu.com/s?id=1619909152168711034&amp;wfr=spider&amp;for=pc">程序员猝死之后大疆称无加班文化 离职员工怒了</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="http://www.sangfor.com.cn">深信服</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">9106</td>
-<td style="text-align: center"><a href="https://www.v2ex.com/t/525495">深信服真的每天加班到 11 点吗</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="http://www.ky-express.com/">跨越速运</a></td>
-<td style="text-align: center">2018年8月</td>
-<td style="text-align: center">大小周、<br>加班、裁员</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/312825261">如何看待跨越速运的裁员方式？ - 知乎</a><br> <a href="https://www.zhihu.com/question/47203239/answer/643311492">跨越的水军洗地被抓现行</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.msxf.com/">马上金融</a></td>
-<td style="text-align: center">2018年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">每天下班开会分享，实际超过996<br><a href="https://www.kanzhun.com/pl5641018.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="http://www.viothink.com/?tdsourcetag=s_pctim_aiomsg">深圳市世纪纵横科技发展有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">966、加班、拖延工资</td>
-<td style="text-align: center"><a href="img/chat1.png">拖欠工资</a><a href="img/chat2.png">拖欠工资</a><a href="img/chat3.png">拖欠工资</a>。而且经常加班到1、2点<a href="img/taxi.jpg">加班1</a><a href="img/taxi2.jpg">加班2</a><a href="img/taxi3.jpg">加班3</a>。周六是强制上班</td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.globalegrow.com/">深圳市环球易购电子商务有限公司</a></td>
-<td style="text-align: center">2007年5月</td>
-<td style="text-align: center">大小周、经常996、偶尔通宵</td>
-<td style="text-align: center"><a href="img/globalegrow_labor_contract.jpg">劳动合同</a>、<a href="img/globalegrow_offer.jpg">Offer</a>+亲历</td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.tencent.com/zh-cn/index.html">腾讯</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5855.html?ka=com-blocker1-review#co_tab">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.vivo.com.cn/">VIVO</a></td>
-<td style="text-align: center">2019年4月14日</td>
-<td style="text-align: center">996大小周</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6139773.html?ka=review-item2">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://m.fangdd.com/">房多多</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr2072113tl56.html?ka=review-label13">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.wondershare.cn/">万兴科技</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">995</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1682212tl56.html?ka=review-label12">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://zhuiyi.ai/">追一科技</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">10106 疯狂加班</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5693705.html?ka=com1-review">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="www.guesscity.net/">深圳市猜猜城科技有限公司</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr6671156.html?ka=com1-review">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="www.auteltech.cn/">道通科技</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr479390tl56.html?ka=review-label8">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="www.szzunhao.com/">尊豪网络科技有限公司</a></td>
-<td style="text-align: center">2019年4月7日</td>
-<td style="text-align: center">每天10小时</td>
-<td style="text-align: center"><a href="https://m.kanzhun.com/pl6818466.html?sid=kzapp&amp;from=singlemessage">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.ximmerse.com/">广东虚拟现实科技有限公司(Ximmerse)</a></td>
-<td style="text-align: center">2016年06月1日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="img/Ximmerse%E8%80%83%E5%8B%A4%E9%82%AE%E4%BB%B6.png">邮件通知</a> <a href="img/Ximmerse%E5%88%B6%E5%BA%A6%E6%96%B9%E6%A1%88.png">制度截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.bindo.com/">边度网络科技（深圳）有限公司</a></td>
-<td style="text-align: center">2019年3月25日</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="img/bindo_com_996.jpg">制度要求截图</a><br><a href="img/bindo_com_996_2.jpg">打卡截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="http://www.vfuchong.com/">微付充科技有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">大小周， 每个月固定两天</td>
-<td style="text-align: center"><a href="https://www.jobui.com/company/12488776/salary/">职友集</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="http://www.shenguyun.com/">深圳沈鼓测控技术有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">提倡员工签署自愿加班协议</td>
-<td style="text-align: center"><a href="img/%E6%B7%B1%E5%9C%B3%E6%B2%88%E9%BC%93%E8%87%AA%E6%84%BF%E5%8A%A0%E7%8F%AD%E6%89%BF%E8%AF%BA%E4%B9%A6.jpg">承诺书图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.laihua.com/">深圳市前海手绘科技文化有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996连坐，如果有人迟到或请事假，全部门996一周</td>
-<td style="text-align: center"><a href="img/%E6%9D%A5%E7%94%BB996.png">群聊图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳/杭州</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr1439970.html">华为外包</a></td>
-<td style="text-align: center">2018年3月</td>
-<td style="text-align: center">大小周、加班、裁员</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/28517881">华为外包是怎样的体验？ - 知乎</a><a href="img/huawei_hangzhou_timing.png">打卡记录</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.qidianla.com/">深圳聚力创想信息科技有限公司</a></td>
-<td style="text-align: center">------</td>
-<td style="text-align: center">大小周、加班</td>
-<td style="text-align: center"><a href="img/qidianxueyuan1.jpg">打卡通知1</a>、<a href="img/qidianxueyuan2.jpg">打卡通知2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">珠海</td>
-<td style="text-align: center"><a href="http://www.kingsoft.com/">金山软件</a></td>
-<td style="text-align: center">2017年7月12日</td>
-<td style="text-align: center">996/9106</td>
-<td style="text-align: center"><a href="img/%E9%87%91%E5%B1%B1%E8%BD%AF%E4%BB%B6-9106.png">图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">福州</td>
-<td style="text-align: center"><a href="http://www.zftii.com/">中富通集团股份有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">宣扬马云996 随意要求员工加班</td>
-<td style="text-align: center"><a href="img/zftjt.jpg">微信截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">福建</td>
-<td style="text-align: center"><a href="http://www.sbszipper.com/">福建浔兴拉链科技股份有限公司</a></td>
-<td style="text-align: center">2019年4月11日</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center">亲历+<a href="img/fjxxydkq.png">元旦前考勤注解</a><a href="img/fjxxydfj.png">大小周外加周末充当法定节假日外加随意重置大小周顺序-元旦</a>、<a href="img/fjxxqmfj.png">大小周外&gt;加周末充当法定节假日外加随意重置大小周顺序-清明节</a></td>
-</tr>
-<tr>
-<td style="text-align: center">苏州</td>
-<td style="text-align: center"><a href="http://www.shuncom.com">顺舟智能</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://jobs.zhaopin.com/CC549324722J00346803701.htm">智联招聘</a></td>
-</tr>
-<tr>
-<td style="text-align: center">苏州</td>
-<td style="text-align: center"><a href="http://www.one-dream.com.cn/">苏州同思软件有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996、9106</td>
-<td style="text-align: center"><a href="img/tongsi1.png">图片</a>、<a href="img/tongsi2.png">图片</a>、<a href="img/tongsi3.png">图片</a>、<a href="img/tongsi4.png">图片</a>、<a href="https://www.kanzhun.com/pl6983505.html?ka=comreview-showall2">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">苏州</td>
-<td style="text-align: center"><a href="http://www.linkstec.com/">凌志软件股份有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996，9106，9116</td>
-<td style="text-align: center"><a href="img/lingzhi1.png">专坑实习生</a>、<a href="https://www.kanzhun.com/gsr99810c50.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">苏州</td>
-<td style="text-align: center"><a href="https://www.momenta.cn/">Momenta</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="img/mbgwb.jpg">CEO朋友圈宣扬马云996</a></td>
-</tr>
-<tr>
-<td style="text-align: center">长沙</td>
-<td style="text-align: center"><a href="http://www.transfar.com/">湖南创发科技有限公司</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">亲历 <a href="https://www.kanzhun.com/gso238619.html?ka=com1-title">看准网</a> <a href="http://www.cnblogs.com/rawman/p/3401579.html">博客园</a></td>
-</tr>
-<tr>
-<td style="text-align: center">青岛</td>
-<td style="text-align: center"><a href="http://www.haier.net/">海尔集团</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/21895528">在海尔工作怎么样</a> + 亲历</td>
-</tr>
-<tr>
-<td style="text-align: center">西安</td>
-<td style="text-align: center"><a href="http://facebook.yeahmobi.com/">易点天下</a></td>
-<td style="text-align: center">-----</td>
-<td style="text-align: center">9116/9117</td>
-<td style="text-align: center">每天下午6点开始开会，动不动就通宵，管理层的一个是从华为挖过来的，有狂躁症，动不动就炸，肯恐怖。<a href="img/%E6%98%93%E7%82%B9%E5%A4%A9%E4%B8%8B.jpeg">工作截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">潍坊</td>
-<td style="text-align: center"><a href="https://www.goertek.com/">歌尔股份</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">大小周、节假日遇单休从双休周调休</td>
-<td style="text-align: center"><a href="img/goertek.jpeg">考勤规定</a> <a href="img/goertek-1.jpg">放假安排1</a> <a href="img/goertek-2.jpg">放假安排2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">济南</td>
-<td style="text-align: center"><a href="http://www.inspur.com/">浪潮集团</a></td>
-<td style="text-align: center">-----</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">奋进者申请书 <a href="https://baike.baidu.com/item/996%E5%B7%A5%E4%BD%9C%E5%88%B6/19940031?fromtitle=996&amp;fromid=19958311&amp;fr=aladdin#3">996工作制</a></td>
-</tr>
-<tr>
-<td style="text-align: center">西安</td>
-<td style="text-align: center"><a href="http://www.chinasofti.com/">中软国际科技服务有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://jobs.zhaopin.com/CC508620126J00303154805.htm">猎聘网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.zhipin.com/gongsir/7610a4892e11cc781XZ_09i1FA%7E%7E.html?ka=company-jobs">紫优科技</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">9116</td>
-<td style="text-align: center"><a href="img/%E6%B7%B1%E5%9C%B3%E7%B4%AB%E4%BC%98%E7%A7%91%E6%8A%80.jpg">公司老板发的招聘信息</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海/西安</td>
-<td style="text-align: center"><a href="http://www.huaqin.com/">华勤通讯技术有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gso238619.html?ka=com1-title">看准网</a> <a href="https://www.zhihu.com/question/49628909/answer/522467068">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center"><a href="http://www.xiaozhu.com/">小猪短租</a></td>
-<td style="text-align: center">-----</td>
-<td style="text-align: center">997</td>
-<td style="text-align: center">4.22-5.10连续上班,晚上默认加班,不加班领导会找谈话。<a href="img/%E5%B0%8F%E7%8C%AA%E7%9F%AD%E7%A7%9F.jpg">工作截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center">深圳市蓝色海洋教育科技有限公司</td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">一家2019年4月新成立的公司，明确996招聘 <a href="img/lansehaiyang-boss.jpeg">招聘截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center"><a href="http://www.minstone.com.cn/">广州明动软件股份有限公司</a></td>
-<td style="text-align: center">2018年9月</td>
-<td style="text-align: center">9106</td>
-<td style="text-align: center">每天晚上10:30才能走，甚至更晚，经常通宵，一周六天 <a href="https://raw.githubusercontent.com/willywonkauk/staticref/master/1.png">领导发的邮件</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广西</td>
-<td style="text-align: center">广西安辰信息产业股份有限公司</td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">大小周</td>
-<td style="text-align: center"><a href="https://github.com/euxeuxeux/996.ICU/blob/master/blacklist/img/%E6%90%9C%E7%8B%97%E6%88%AA%E5%9B%BE20190429115610.png">考勤时间截图，可提供制度文件</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="https://www.szcomtop.com//">深圳市康拓普信息技术有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center">亲历</td>
-</tr>
-<tr>
-<td style="text-align: center">山东</td>
-<td style="text-align: center">潍柴动力股份有限公司/潍柴集团</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">无双休</td>
-<td style="text-align: center"><a href="http://www.zhihu.com/question/309984979">知乎问答1</a>、 <a href="http://www.zhihu.com/question/270906947">知乎问答2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center">深圳市金泰长丰科技有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">大小周、无加班工</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr6472604.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">重庆</td>
-<td style="text-align: center">重庆力华亘田科技有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">886计件，实际两周放一天假，没有加班费，法定假缩水。计时大小周，加班费不分法定假与周末，一律7元每小时。</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/05/5cce4fc86f789.jpg">截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">北京永信至诚科技股份有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">正常965，但强制每月加三天班，每周末加半天班</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/05/5ccee0a6e15b2.jpg">内部手册</a>、 <a href="https://i.loli.net/2019/05/05/5ccee0a706458.jpg">激励敬业政策</a>、 <a href="https://i.loli.net/2019/05/05/5ccee0a722527.jpg">内部PPT</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">美团</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">10 10 5</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl469105.html">看准网用户评论</a>、 <a href="https://blog.csdn.net/weixin_43245088/article/details/85635423">CSDN</a>、 <a href="https://finance.ifeng.com/a/20170505/15358688_0.shtml">ifeng</a></td>
-</tr>
-<tr>
-<td style="text-align: center">苏州</td>
-<td style="text-align: center">玩友时代</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">995, 排班996值班;无加班工资，名义调休，真调休的话领导各种不爽</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5632014tl56.html">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">赞同科技</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">997, 无加班工资</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr37775.html">看准网</a>、 <a href="https://www.kanzhun.com/pl5666140.html">看准网用户评论</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">网医纳康</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996，奋斗者协议</td>
-<td style="text-align: center"><a href="http://ww1.sinaimg.cn/large/5e18fb3fly1g2tzf4xpjej20go0m83zd.jpg">奋斗者协议图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">苏州</td>
-<td style="text-align: center">携住(快住)智能科技</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">966</td>
-<td style="text-align: center"><a href="img/IMG_2365.JPG">图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">淄博</td>
-<td style="text-align: center">淄博赢师教育有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">老板随心所欲扣钱处罚，上下班无固定时间，出差无休息，强制加班，加班费只有几块钱甚至无加班费</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/09/5cd42abc516fd.jpg">聊天截图</a><br/><a href="https://i.loli.net/2019/05/09/5cd42abc6579b.jpg">聊天截图2</a><br/><a href="https://i.loli.net/2019/05/09/5cd42abc6c140.jpg">聊天截图3</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">北京凯奇谷信息技术股份有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://m.kanzhun.com/pl6920611.html?sid=kzapp">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center">深圳航天信息</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">976；大小周；完全没有加班工资，没有任何补助，加班时间计算在绩效中，每天没加班1小时扣绩效。</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/09/5cd42bb1e41b2.png">没有任何补贴，无差别加班</a><br/><br/><a href="https://i.loli.net/2019/05/09/5cd42bb20076b.png">加班时间不算在绩效中的额外工作时间。也就是周六日加班不算在绩效加班时间中。</a></td>
-</tr>
-<tr>
-<td style="text-align: center">南京</td>
-<td style="text-align: center">江苏润恒物流发展有限公司（集团）</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">8:30-20:30或10:30 无加班工资，不加班扣工资，扣押合同，不按合同发放13薪水，拖欠工资…</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/265367701">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">海尔优家智能科技（北京）有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">不定期996或976，没有加班工资，或极少补偿；开始强制2个月，强制执行3个月，春节前后不能请假</td>
-<td style="text-align: center">开始强制2个月:<a href="img/%E6%B5%B7%E5%B0%94%E4%BC%98%E5%AE%B6%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%80.png">图片1</a>，<a href="img/%E6%B5%B7%E5%B0%94%E4%BC%98%E5%AE%B6%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%802-1.jpg">图片2</a><br/><a href="img/%E6%B5%B7%E5%B0%94%E4%BC%98%E5%AE%B6%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%802-2.jpg">强制执行3个月，春节前后不能请假</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">松鼠拼拼</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.lagou.com/gongsi/q211444.html">拉勾网</a><br/><br/><a href="https://yanzhi.lagou.com/question/82537.html">996评论</a></td>
-</tr>
-<tr>
-<td style="text-align: center">南京</td>
-<td style="text-align: center">车置宝</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6252690.html">看准网评论</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center">深圳市艾森智能技术有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996，加班无工资，激励员工多加班。扬言说不加班不是的公司会死去。</td>
-<td style="text-align: center"><a href="img/wechatimg5498-meitu-1.png">聊天截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center">杭州数澜科技有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/gsr5709934.html">看准网</a><br/><a href="https://www.kanzhun.com/pl7182332.html">看准网评论1</a><br/><a href="https://www.kanzhun.com/pl6556133.html">看准网评论2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">大连</td>
-<td style="text-align: center"><a href="http://www.tfrunning.com.cn">大连同方软银科技股份有限公司</a></td>
-<td style="text-align: center">2019年4月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl5661184.html?ka=review-item6">看准网</a>、<a href="https://www.kanzhun.com/pl7170642.html?ka=review-item-ckqw">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳市</td>
-<td style="text-align: center">优学派（深圳市致远优学教育科技有限公司）（优学天下教育发展股份有限公司）</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">规定965，实际一年3/4时间都是9(9-凌晨5)(6‖7)，没有加班工资。</td>
-<td style="text-align: center"><a href="https://www.jobui.com/company/12458179/salary/">职友集（看“是否经常加班”投票）</a><br/><a href="img/%E4%BC%98%E5%AD%A6%E6%B4%BE1.jpg">朋友圈图片1</a>，<a href="img/%E4%BC%98%E5%AD%A6%E6%B4%BE2.jpg">图片2</a>，<a href="img/%E4%BC%98%E5%AD%A6%E6%B4%BE3.jpg">图片3</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center">深圳农村商业银行</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">8.5 8.5 6 外包</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/22/5ce4bb4c48a1269468.png">微信群内部截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">北京中体联合数据科技有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/22/5ce4bcc5a753d12104.png">内部邮件</a><a href="https://i.loli.net/2019/05/22/5ce4bcc5a753d12104.png">邮件2</a><a href="https://i.loli.net/2019/05/22/5ce4bcc627c3f19326.png">内部聊天</a><a href="https://i.loli.net/2019/05/22/5ce4bcc627c3f19326.png">聊天2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京</td>
-<td style="text-align: center">北京金山办公软件有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996，黑心企业，默认加班，无加班工资，不加班被谈话，一个奇葩的公司</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6009932.html?ka=comreview-showall1">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">合肥市</td>
-<td style="text-align: center">安徽学云教育信息科技有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">每周 一二四六 加班，虽然没说到几点，但基本默认必须到9点以后</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/05/22/5ce4be42874ad66243.jpg">公司领导人员的群</a><a href="https://i.loli.net/2019/05/22/5ce4be42874ad66243.jpg">聊天2</a><a href="https://i.loli.net/2019/05/22/5ce4be428979080125.jpg">说话的是CTO</a><a href="https://i.loli.net/2019/05/22/5ce4be428979080125.jpg">聊天3</a></td>
-</tr>
-<tr>
-<td style="text-align: center">武汉</td>
-<td style="text-align: center">精灵云网络</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">利用合同漏洞等拒绝赔偿开除赔款</td>
-<td style="text-align: center"><a href="https://www.v2ex.com/t/563422">V2ex</a> <a href="http://www.sohu.com/a/313841193_120047182">搜狐新闻</a> <a href="https://i.loli.net/2019/05/22/5ce4ba51e8e6655960.jpg">公司声明</a></td>
-</tr>
-<tr>
-<td style="text-align: center">马鞍山市</td>
-<td style="text-align: center">马鞍山百助网络科技有限公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.zhipin.com/gongsi/ce2fa3a8b75fc0c91nBz2t8%7E.html?ka=company-intro">BOSS直聘</a><a href="https://i.loli.net/2019/05/22/5ce4bf68e304995658.png">BOSS直聘截图</a><a href="https://i.loli.net/2019/05/22/5ce4bf68e304995658.png">截图2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">西安</td>
-<td style="text-align: center">伯图大数据西安分公司</td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">我公司规定是996的上班模式，看能接受吗？第一个数字上班时间，第二个数字下班时间，第三个数字一周的上班天数。这是我们规定的上班时间，薪资可以谈，但是需要来公司和用人部门面谈一下。</td>
-<td style="text-align: center"><a href="https://github.com/996icu/996.ICU/blob/master/blacklist/img/%E4%BC%AF%E5%9B%BE%E5%A4%A7%E6%95%B0%E6%8D%AE.jpg">boss聊天图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center"><a href="http://www.kiwigames.cn/">成都几维科技</a></td>
-<td style="text-align: center">2019年3月</td>
-<td style="text-align: center">10 8 5，项目提审阶段10 10 6，实习生也不放过，并且实习生没有加班工资</td>
-<td style="text-align: center"><a href="img/%E6%88%90%E9%83%BD%E5%87%A0%E7%BB%B4%E7%A7%91%E6%8A%801.png">qq群内部截图1</a>、<a href="img/%E6%88%90%E9%83%BD%E5%87%A0%E7%BB%B4%E7%A7%91%E6%8A%802.png">qq群内部截图2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">大连</td>
-<td style="text-align: center"><a href="http://www.tfrunning.com.cn/">同方软银</a></td>
-<td style="text-align: center">2017年5月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl5661184.html?ka=review-item6">看准网1</a> <a href="https://www.kanzhun.com/pl7170642.html?ka=review-item-ckqw">看准网2</a></td>
-</tr>
-<tr>
-<td style="text-align: center">杭州</td>
-<td style="text-align: center"><a href="https://www.dahuatech.com/index.php/about.html">浙江大华</a></td>
-<td style="text-align: center">2015年10月</td>
-<td style="text-align: center">浙江杭州办linux运维的技术支持大小周、无加班工资</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl6967786.html?ka=review-item-ckqw">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center"><a href="http://www.rondaful.com/">利朗达</a></td>
-<td style="text-align: center">2017年10月</td>
-<td style="text-align: center">996、加班费一天15块</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/265739414">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">兰州</td>
-<td style="text-align: center"><a href="http://www.wanwei.com.cn/">中电万维</a></td>
-<td style="text-align: center">2018年3月</td>
-<td style="text-align: center">997</td>
-<td style="text-align: center"><a href="https://www.kanzhun.com/pl7109874.html?ka=review-item4">看准网</a></td>
-</tr>
-<tr>
-<td style="text-align: center">广州</td>
-<td style="text-align: center">广州智悦网络科技有限公司</td>
-<td style="text-align: center">2019 年 4 月 1 号</td>
-<td style="text-align: center">995</td>
-<td style="text-align: center"><a href="/blacklist/img/gz_zhiyue.png">图片</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center"><a href="http://www.odianyun.com/">上海欧电云信息科技有限公司</a></td>
-<td style="text-align: center">2019年5月</td>
-<td style="text-align: center">表面是965，其实至少995，经常加班到凌晨1‖2点，没有加班工资。</td>
-<td style="text-align: center"><a href="img/%E6%AC%A7%E7%94%B5%E4%BA%91%E5%8A%A0%E7%8F%AD%E8%A1%8C%E6%94%BF%E9%82%AE%E4%BB%B6%E6%88%AA%E5%9B%BE3.png">加班点餐邮件1</a>，<a href="img/%E6%AC%A7%E7%94%B5%E4%BA%91%E5%8A%A0%E7%8F%AD%E9%A4%90%E7%A5%A8%E6%88%AA%E5%9B%BE1.png">加班点餐邮件2</a>,[加班点餐邮件2](img/欧电云加班餐票截图2.png</td>
-</tr>
-<tr>
-<td style="text-align: center">南京</td>
-<td style="text-align: center"><a href="http://www.wanmi.com/">南京万米信息技术有限公司</a></td>
-<td style="text-align: center">2019年6月</td>
-<td style="text-align: center">公司经常996</td>
-<td style="text-align: center"><a href="img/ceo1.jpeg">ceo强调9961</a>，<a href="img/ceo2.jpeg">ceo强调9962</a></td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center">成都市极米科技有限公司</td>
-<td style="text-align: center">2019年6月</td>
-<td style="text-align: center">大小周、99</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/06/22/5d0dcde28d55045439.png">公司群内通知</a></td>
-</tr>
-<tr>
-<td style="text-align: center">兰州</td>
-<td style="text-align: center">中电万维信息技术有限责任公司</td>
-<td style="text-align: center">2019年6月</td>
-<td style="text-align: center">996</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/06/22/5d0dcf975ff1796946.png">TIM截图</a><a href="https://i.loli.net/2019/06/22/5d0dcf97c1d9342344.png">TIM截图</a></td>
-</tr>
-<tr>
-<td style="text-align: center">成都</td>
-<td style="text-align: center">成都洋葱新未来网络科技有限公司</td>
-<td style="text-align: center">2019年6月</td>
-<td style="text-align: center">9 10 6 无加班工资，工作日加班4小时第二天只能晚到30分钟，仅周末加班可调休</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/06/22/5d0dd018e6b5033832.jpg">考勤日历</a><a href="https://i.loli.net/2019/06/22/5d0dd01990b2834188.jpg">考勤日历</a></td>
-</tr>
-<tr>
-<td style="text-align: center">深圳</td>
-<td style="text-align: center">中睿宏智汽车技术（深圳）有限公司</td>
-<td style="text-align: center">2109年6月</td>
-<td style="text-align: center">995并且拖欠工资</td>
-<td style="text-align: center"><a href="https://www.v2ex.com/t/572452#reply413">V2EX</a></td>
-</tr>
-<tr>
-<td style="text-align: center">北京、南京</td>
-<td style="text-align: center">小诚文化传媒有限公司</td>
-<td style="text-align: center">2019年6月</td>
-<td style="text-align: center">大小周、无加班工资、无年假、绩效占比过高</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/06/22/5d0dd11c7099916753.jpg">考勤记录</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center">思满科技</td>
-<td style="text-align: center">2019年9月</td>
-<td style="text-align: center">至少996，无加班工资</td>
-<td style="text-align: center">在看准app上花钱洗评论 kpi随意克扣。<a href="https://i.loli.net/2019/06/22/5d0dd3da9640210875.jpg">真实的评价</a><a href="https://i.loli.net/2019/06/22/5d0dd3dbee9a994536.jpg">真是评价</a><a href="https://i.loli.net/2019/06/22/5d0dd3da6617453896.jpg">HR自己写的假评价</a></td>
-</tr>
-<tr>
-<td style="text-align: center">上海</td>
-<td style="text-align: center">上海非码网络科技有限公司</td>
-<td style="text-align: center">2019年9月</td>
-<td style="text-align: center">996，无加班费，更不提供加班餐。</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/06/22/5d0dd4ac3a91b42022.png">班车通知</a><a href="https://i.loli.net/2019/06/22/5d0dd4ae49dbb47592.png">内部论坛</a></td>
-</tr>
-<tr>
-<td style="text-align: center">长沙</td>
-<td style="text-align: center">杭州数梦工场科技有限公司</td>
-<td style="text-align: center">2019年9月</td>
-<td style="text-align: center">周一到周四早9晚9 周五周日早9晚6</td>
-<td style="text-align: center"><a href="https://i.loli.net/2019/06/22/5d0dd5063e0ed50557.png">内部排版</a></td>
-</tr>
-<tr>
-<td style="text-align: center">桐庐</td>
-<td style="text-align: center">海康威视</td>
-<td style="text-align: center">2019年9月</td>
-<td style="text-align: center">777大小周</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/36922386/answer/545711911">知乎</a></td>
-</tr>
-<tr>
-<td style="text-align: center">郑州</td>
-<td style="text-align: center">宇通客车股份有限公司</td>
-<td style="text-align: center">2019年9月</td>
-<td style="text-align: center">887</td>
-<td style="text-align: center"><a href="https://www.zhihu.com/question/303129920/answer/576465096">知乎</a>}</td>
-</tr>
-</tbody>
-</table>
 
 ]]></content>
   </entry>
