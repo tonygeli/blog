@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  第一篇 Swoole Timer 的应用 - lilaiqun
+  如何保证消息队列的高可用啊？ - lilaiqun
   
   </title>
   
@@ -139,14 +139,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>第一篇 Swoole Timer 的应用</h1>
+          <h1>如何保证消息队列的高可用啊？</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/7/23</span>
+          <span class="date">2019/10/2</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+              <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
            
          
           <span class="comments">
@@ -159,152 +159,66 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <p>应用场景:</p>
+      <p>问题：</p>
 
-<ol>
-<li>每天凌晨跑业务脚本</li>
-<li>设计一个用WEB界面管理管理定时任务的系统。</li>
-</ol>
+<pre><code class="language-text">MQ的缺点：系统可用性降低。接下来围绕MQ的缺点怎么解决。
 
-<span id="more"></span><!-- more -->
-
-<blockquote>
-<p>转自：公众号 - 新亮笔记</p>
-</blockquote>
-
-<h2 id="toc_0">你好，Swoole</h2>
-
-<p>PHP 的协程高性能网络通信引擎，使用 C/C++ 语言编写，提供了多种通信协议的网络服务器和客户端模块。</p>
-
-<p>Swoole 可应用于互联网、移动通信、企业软件、网络游戏、物联网、车联网、智能家庭等领域。</p>
-
-<p>学习 Swoole 之前，最好先了解下底层知识，比如，线程/进程、IO、TCP/IP协议 等。</p>
-
-<p>推荐大家读一下《Linux 高性能服务器编程》这本书。</p>
-
-<p>这篇文章主要分享 Timer 毫秒精度的定时器。</p>
-
-<p>本地版本：PHP 7.2.6、Swoole 4.3.1。</p>
-
-<h2 id="toc_1">Timer</h2>
-
-<p>主要有三个方法：</p>
-
-<p>swoole_timer_tick 间隔的时钟控制器</p>
-
-<p>swoole_timer_after 指定的时间后执行</p>
-
-<p>swoole_timer_clear 删除定时器</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">// 每隔3000ms触发一次
-$timer_id = swoole_timer_tick(3000, function ($timer_id) {
-    echo &quot;tick-&quot; . $timer_id . &quot; 3000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-});
-
-// 30000ms后删除定时器
-swoole_timer_after(30000, function() use ($timer_id) {
-    echo &quot;after 30000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-    swoole_timer_clear($timer_id);
-});
+MQ的高可用性怎么保证？ 
 </code></pre>
 
-<p>运行结果：</p>
+<h2 id="toc_0">1. RabbitMQ的高可用</h2>
 
-<pre><code class="language-text">&gt; php timer.php
+<p>RabbitMQ比较有代表性，因为是基于主从架构</p>
 
-tick-1 3000ms-2019-07-23 06:23:51
-tick-1 3000ms-2019-07-23 06:23:54
-tick-1 3000ms-2019-07-23 06:23:57
-after 30000ms-2019-07-23 06:23:57
-</code></pre>
+<p>3种模式：<strong>单机模式，普通集群模式，镜像集群模式</strong></p>
 
-<h2 id="toc_2">应用场景</h2>
+<p>1）单机模式</p>
 
-<h3 id="toc_3">一、每天凌晨跑业务脚本</h3>
+<p>就是demo级别的，一般就是你本地启动了玩玩儿的，没人生产用单机模式</p>
 
-<p>脚本中包括了请求其他业务方或第三方的接口，如果接口超时无响应或没有数据返回，需要进行重试。</p>
+<p>2）普通集群模式</p>
 
-<p>重试机制为：每5隔分钟再发送一次请求，最多尝试5次，在5次内成功停止该任务，5次仍失败也停止该任务。</p>
+<p><img src="http://images.lilaiqun.com/15700196661169.jpg" alt=""/></p>
 
-<p>示例代码：</p>
+<p>意思就是在多台机器上启动多个rabbitmq实例，每个机器启动一个。但是你创建的queue，只会放在一个rabbtimq实例上，但是每个实例都同步queue的元数据。完了你消费的时候，实际上如果连接到了另外一个实例，那么那个实例会从queue所在实例上拉取数据过来。</p>
 
-<pre><code class="language-php">function requestUrl($url) {
-    return false;
-}
+<p>这种方式确实很麻烦，也不怎么好，没做到所谓的分布式，就是个普通集群。因为这导致你要么消费者每次随机连接一个实例然后拉取数据，要么固定连接那个queue所在实例消费数据，前者有数据拉取的开销，后者导致单实例性能瓶颈。</p>
 
-$apiUrl = &#39;&#39;;      // api地址
-$exec_time = 0;    // 执行次数
-swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
-    $exec_time++;
-    $result = requestUrl($apiUrl);
-    echo date(&#39;Y-m-d H:i:s&#39;) . &quot; 执行任务中...(&quot; . $exec_time . &quot;)\n&quot;;
-    if ($result) {
-        // 业务代码
-        swoole_timer_clear($timer_id);  // 停止定时器
-        echo date(&#39;Y-m-d H:i:s&#39;) . &#39; 第（&#39; . $exec_time . &quot;）次请求接口任务执行成功\n&quot;;
-    }else {
-        if ($exec_time &gt;= 5) {
-            swoole_timer_clear($timer_id);  // 停止定时器
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，已失败5次，停止执行\n&quot;;
-        } else {
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，5分钟后再次尝试\n&quot;;
-        }
-    }
-});
-</code></pre>
+<p>而且如果那个放queue的实例宕机了，会导致接下来其他实例就无法从那个实例拉取，如果你开启了消息持久化，让rabbitmq落地存储消息的话，消息不一定会丢，得等这个实例恢复了，然后才可以继续从这个queue拉取数据。</p>
 
-<p>运行结果：</p>
+<p>所以这个事儿就比较尴尬了，这就没有什么所谓的高可用性可言了，这方案主要是提高吞吐量的，就是说让集群中多个节点来服务某个queue的读写操作。</p>
 
-<pre><code class="language-text">2019-07-23 08:50:08 执行任务中...(1)
-2019-07-23 08:50:08请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:14 执行任务中...(2)
-2019-07-23 08:50:14请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:20 执行任务中...(3)
-2019-07-23 08:50:20请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:26 执行任务中...(4)
-2019-07-23 08:50:26请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:32 执行任务中...(5)
-2019-07-23 08:50:32请求接口失败，已失败5次，停止执行
-</code></pre>
+<p>3）镜像集群模式</p>
 
-<h3 id="toc_4">二、设计一个用WEB界面管理管理定时任务的系统。</h3>
+<p><img src="http://images.lilaiqun.com/15700197102596.jpg" alt=""/></p>
 
-<p>Linux Crontab 最小时间粒度为分钟。</p>
+<p>这种模式，才是所谓的rabbitmq的高可用模式，跟普通集群模式不一样的是，你创建的queue，无论元数据还是queue里的消息都会存在于多个实例上，然后每次你写消息到queue的时候，都会自动把消息到多个实例的queue里进行消息同步。</p>
 
-<p>PHP Swoole 最小时间粒度为毫秒。</p>
+<p>这样的话，好处在于，你任何一个机器宕机了，没事儿，别的机器都可以用。坏处在于，第一，这个性能开销也太大了吧，消息同步所有机器，导致网络带宽压力和消耗很重！第二，这么玩儿，就没有扩展性可言了，如果某个queue负载很重，你加机器，新增的机器也包含了这个queue的所有数据，并没有办法线性扩展你的queue</p>
 
-<pre><code class="language-text">--------------
-介绍一下时间配置
+<p>那么怎么开启这个镜像集群模式呢？我这里简单说一下，避免面试人家问你你不知道，其实很简单rabbitmq有很好的管理控制台，就是在后台新增一个策略，这个策略是镜像集群模式的策略，指定的时候可以要求数据同步到所有节点的，也可以要求就同步到指定数量的节点，然后你再次创建queue的时候，应用这个策略，就会自动将数据同步到其他的节点上去了。</p>
 
-    0   1   2   3   4   5
-    |   |   |   |   |   |
-    |   |   |   |   |   +------ day of week (0 - 6) (Sunday=0)
-    |   |   |   |   +------ month (1 - 12)
-    |   |   |   +-------- day of month (1 - 31)
-    |   |   +---------- hour (0 - 23)
-    |   +------------ min (0 - 59)
-    +-------------- sec (0-59)[可省略，如果没有0位,则最小时间粒度是分钟]
-</code></pre>
+<h2 id="toc_1">2. kakfa</h2>
 
-<p>WEB界面管理</p>
+<p><img src="http://images.lilaiqun.com/15700200076415.jpg" alt=""/></p>
 
-<ul>
-<li>登录、权限管理</li>
-<li>任务管理（增删改查）</li>
-<li>脚本机管理（机器IP地址）</li>
-<li>任务日志</li>
-</ul>
+<p>kafka一个最基本的架构认识：多个broker组成，每个broker是一个节点；你创建一个topic，这个topic可以划分为多个partition，每个partition可以存在于不同的broker上，每个partition就放一部分数据。</p>
 
-<p>项目地址</p>
+<p>这就是天然的分布式消息队列，就是说一个topic的数据，是分散放在多个机器上的，每个机器就放一部分数据。</p>
 
-<p><a href="https://github.com/osgochina/Donkey">https://github.com/osgochina/Donkey</a></p>
+<p>实际上rabbitmq之类的，并不是分布式消息队列，他就是传统的消息队列，只不过提供了一些集群、HA的机制而已，因为无论怎么玩儿，rabbitmq一个queue的数据都是放在一个节点里的，镜像集群下，也是每个节点都放这个queue的完整数据。</p>
 
-<p>三、比如，监控服务器状况。</p>
+<p>kafka 0.8以前，是没有HA机制的，就是任何一个broker宕机了，那个broker上的partition就废了，没法写也没法读，没有什么高可用性可言。</p>
 
-<p>参考文档<br/>
-<a href="https://wiki.swoole.com/wiki/page/p-timer.html">https://wiki.swoole.com/wiki/page/p-timer.html</a></p>
+<p>kafka 0.8以后，提供了HA机制，就是replica副本机制。每个partition的数据都会同步到其他机器上，形成自己的多个replica副本。然后所有replica会选举一个leader出来，那么生产和消费都跟这个leader打交道，然后其他replica就是follower。写的时候，leader会负责把数据同步到所有follower上去，读的时候就直接读leader上数据即可。只能读写leader？很简单，要是你可以随意读写每个follower，那么就要care数据一致性的问题，系统复杂度太高，很容易出问题。kafka会均匀的将一个partition的所有replica分布在不同的机器上，这样才可以提高容错性。</p>
+
+<p>这么搞，就有所谓的高可用性了，因为如果某个broker宕机了，没事儿，那个broker上面的partition在其他机器上都有副本的，如果这上面有某个partition的leader，那么此时会重新选举一个新的leader出来，大家继续读写那个新的leader即可。这就有所谓的高可用性了。</p>
+
+<p>写数据的时候，生产者就写leader，然后leader将数据落地写本地磁盘，接着其他follower自己主动从leader来pull数据。一旦所有follower同步好数据了，就会发送ack给leader，leader收到所有follower的ack之后，就会返回写成功的消息给生产者。（当然，这只是其中一种模式，还可以适当调整这个行为）</p>
+
+<p>消费的时候，只会从leader去读，但是只有一个消息已经被所有follower都同步成功返回ack的时候，这个消息才会被消费者读到。</p>
+
+<p>实际上这块机制，讲深了，是可以非常之深入的，但是我还是回到我们这个课程的主题和定位，聚焦面试，至少你听到这里大致明白了kafka是如何保证高可用机制的了，对吧？不至于一无所知，现场还能给面试官画画图。要遇上面试官确实是kafka高手，深挖了问，那你只能说不好意思，太深入的你没研究过。</p>
 
 
     
@@ -315,16 +229,16 @@ swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15639348696355.html" 
-          title="Previous Post: 第二篇 Swoole Task 的应用">&laquo; 第二篇 Swoole Task 的应用</a>
+          <a href="15700210659906.html" 
+          title="Previous Post: 如何保证消息不被重复消费（消费时的幂等性）">&laquo; 如何保证消息不被重复消费（消费时的幂等性）</a>
       
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15638621513516.html" 
-          title="Next Post: Swoole 文章汇总">Swoole 文章汇总 &raquo;</a>
+          <a  href="15700030762829.html" 
+          title="Next Post: 消息队列技术选型">消息队列技术选型 &raquo;</a>
       
       </p>
         </div>

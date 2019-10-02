@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  第一篇 Swoole Timer 的应用 - lilaiqun
+  Swoole学习 - lilaiqun
   
   </title>
   
@@ -130,219 +130,174 @@
        
 
  <script type="text/javascript">
-  $(function(){
-    $('#menu_item_index').addClass('is_active');
-  });
+	$(function(){
+		$('#menu_item_index').addClass('is_active');
+	});
 </script>
 <div class="row">
-  <div class="large-8 medium-8 columns">
-      <div class="markdown-body article-wrap">
-       <div class="article">
-          
-          <h1>第一篇 Swoole Timer 的应用</h1>
-     
-        <div class="read-more clearfix">
-          <span class="date">2019/7/23</span>
+	<div class="large-8 medium-8 columns">
+		<div class="markdown-body home-categories">
+		
+			<div class="article">
+                <a class="clearlink" href="15643711302986.html">
+                
+                  <h1>第三篇 Swoole WebSocket 的应用</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="15643711302986.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/24</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
 
-          <span>posted in&nbsp;</span> 
-          
-              <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-           
-         
-          <span class="comments">
-            
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="15639348696355.html">
+                
+                  <h1>第二篇 Swoole Task 的应用</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>投递一个异步任务到task_worker池中。此函数是非阻塞的，执行完毕会立即返回。Worker进程可以继续处理新的请求。使用Task功能，必须先设置 task_worker_num，并且必须设置Server的onTask和onFinish事件回调函数。</p>
 
-            
-          </span>
 
-        </div>
-      </div><!-- article -->
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="15639348696355.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/24</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
 
-      <div class="article-content">
-      <p>应用场景:</p>
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="15638622569963.html">
+                
+                  <h1>第一篇 Swoole Timer 的应用</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>应用场景:</p>
 
 <ol>
 <li>每天凌晨跑业务脚本</li>
 <li>设计一个用WEB界面管理管理定时任务的系统。</li>
 </ol>
 
-<span id="more"></span><!-- more -->
 
-<blockquote>
-<p>转自：公众号 - 新亮笔记</p>
-</blockquote>
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="15638622569963.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/23</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
 
-<h2 id="toc_0">你好，Swoole</h2>
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="15638621513516.html">
+                
+                  <h1>Swoole 文章汇总</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>第一篇：<a href="15638622569963.html">Swoole Timer 的应用</a><br/>
+第二篇：<a href="15639348696355.html">第二篇 Swoole Task 的应用</a></p>
 
-<p>PHP 的协程高性能网络通信引擎，使用 C/C++ 语言编写，提供了多种通信协议的网络服务器和客户端模块。</p>
-
-<p>Swoole 可应用于互联网、移动通信、企业软件、网络游戏、物联网、车联网、智能家庭等领域。</p>
-
-<p>学习 Swoole 之前，最好先了解下底层知识，比如，线程/进程、IO、TCP/IP协议 等。</p>
-
-<p>推荐大家读一下《Linux 高性能服务器编程》这本书。</p>
-
-<p>这篇文章主要分享 Timer 毫秒精度的定时器。</p>
-
-<p>本地版本：PHP 7.2.6、Swoole 4.3.1。</p>
-
-<h2 id="toc_1">Timer</h2>
-
-<p>主要有三个方法：</p>
-
-<p>swoole_timer_tick 间隔的时钟控制器</p>
-
-<p>swoole_timer_after 指定的时间后执行</p>
-
-<p>swoole_timer_clear 删除定时器</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">// 每隔3000ms触发一次
-$timer_id = swoole_timer_tick(3000, function ($timer_id) {
-    echo &quot;tick-&quot; . $timer_id . &quot; 3000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-});
-
-// 30000ms后删除定时器
-swoole_timer_after(30000, function() use ($timer_id) {
-    echo &quot;after 30000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-    swoole_timer_clear($timer_id);
-});
-</code></pre>
-
-<p>运行结果：</p>
-
-<pre><code class="language-text">&gt; php timer.php
-
-tick-1 3000ms-2019-07-23 06:23:51
-tick-1 3000ms-2019-07-23 06:23:54
-tick-1 3000ms-2019-07-23 06:23:57
-after 30000ms-2019-07-23 06:23:57
-</code></pre>
-
-<h2 id="toc_2">应用场景</h2>
-
-<h3 id="toc_3">一、每天凌晨跑业务脚本</h3>
-
-<p>脚本中包括了请求其他业务方或第三方的接口，如果接口超时无响应或没有数据返回，需要进行重试。</p>
-
-<p>重试机制为：每5隔分钟再发送一次请求，最多尝试5次，在5次内成功停止该任务，5次仍失败也停止该任务。</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">function requestUrl($url) {
-    return false;
-}
-
-$apiUrl = &#39;&#39;;      // api地址
-$exec_time = 0;    // 执行次数
-swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
-    $exec_time++;
-    $result = requestUrl($apiUrl);
-    echo date(&#39;Y-m-d H:i:s&#39;) . &quot; 执行任务中...(&quot; . $exec_time . &quot;)\n&quot;;
-    if ($result) {
-        // 业务代码
-        swoole_timer_clear($timer_id);  // 停止定时器
-        echo date(&#39;Y-m-d H:i:s&#39;) . &#39; 第（&#39; . $exec_time . &quot;）次请求接口任务执行成功\n&quot;;
-    }else {
-        if ($exec_time &gt;= 5) {
-            swoole_timer_clear($timer_id);  // 停止定时器
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，已失败5次，停止执行\n&quot;;
-        } else {
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，5分钟后再次尝试\n&quot;;
-        }
-    }
-});
-</code></pre>
-
-<p>运行结果：</p>
-
-<pre><code class="language-text">2019-07-23 08:50:08 执行任务中...(1)
-2019-07-23 08:50:08请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:14 执行任务中...(2)
-2019-07-23 08:50:14请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:20 执行任务中...(3)
-2019-07-23 08:50:20请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:26 执行任务中...(4)
-2019-07-23 08:50:26请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:32 执行任务中...(5)
-2019-07-23 08:50:32请求接口失败，已失败5次，停止执行
-</code></pre>
-
-<h3 id="toc_4">二、设计一个用WEB界面管理管理定时任务的系统。</h3>
-
-<p>Linux Crontab 最小时间粒度为分钟。</p>
-
-<p>PHP Swoole 最小时间粒度为毫秒。</p>
-
-<pre><code class="language-text">--------------
-介绍一下时间配置
-
-    0   1   2   3   4   5
-    |   |   |   |   |   |
-    |   |   |   |   |   +------ day of week (0 - 6) (Sunday=0)
-    |   |   |   |   +------ month (1 - 12)
-    |   |   |   +-------- day of month (1 - 31)
-    |   |   +---------- hour (0 - 23)
-    |   +------------ min (0 - 59)
-    +-------------- sec (0-59)[可省略，如果没有0位,则最小时间粒度是分钟]
-</code></pre>
-
-<p>WEB界面管理</p>
-
-<ul>
-<li>登录、权限管理</li>
-<li>任务管理（增删改查）</li>
-<li>脚本机管理（机器IP地址）</li>
-<li>任务日志</li>
-</ul>
-
-<p>项目地址</p>
-
-<p><a href="https://github.com/osgochina/Donkey">https://github.com/osgochina/Donkey</a></p>
-
-<p>三、比如，监控服务器状况。</p>
-
-<p>参考文档<br/>
-<a href="https://wiki.swoole.com/wiki/page/p-timer.html">https://wiki.swoole.com/wiki/page/p-timer.html</a></p>
+<p>第三篇：Swoole WebSocket 的应用<br/>
+<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect</a></p>
 
 
-    
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="15638621513516.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2019/7/23</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
 
-      </div>
-
-      <div class="row">
-        <div class="large-6 columns">
-        <p class="text-left" style="padding:15px 0px;">
-      
-          <a href="15639348696355.html" 
-          title="Previous Post: 第二篇 Swoole Task 的应用">&laquo; 第二篇 Swoole Task 的应用</a>
-      
-        </p>
-        </div>
-        <div class="large-6 columns">
-      <p class="text-right" style="padding:15px 0px;">
-      
-          <a  href="15638621513516.html" 
-          title="Next Post: Swoole 文章汇总">Swoole 文章汇总 &raquo;</a>
-      
-      </p>
-        </div>
-      </div>
-      <div class="comments-wrap">
-        <div class="share-comments">
-          
-
-          
-
-          
-        </div>
-      </div>
-    </div><!-- article-wrap -->
-  </div><!-- large 8 -->
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+              
 
 
-
+			<div class="row">
+			  <div class="large-6 columns">
+			  <p class="text-left" style="padding-top:25px;">
+			   
+			  </p>
+			  </div>
+			  <div class="large-6 columns">
+			<p class="text-right" style="padding-top:25px;">
+			
+			</p>
+			  </div>
+			</div>
+		</div>
+	</div><!-- large 8 -->
 
  <div class="large-4 medium-4 columns">
   <div class="hide-for-small">

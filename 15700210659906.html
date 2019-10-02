@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  第一篇 Swoole Timer 的应用 - lilaiqun
+  如何保证消息不被重复消费（消费时的幂等性） - lilaiqun
   
   </title>
   
@@ -139,14 +139,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>第一篇 Swoole Timer 的应用</h1>
+          <h1>如何保证消息不被重复消费（消费时的幂等性）</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/7/23</span>
+          <span class="date">2019/10/2</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+              <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
            
          
           <span class="comments">
@@ -159,152 +159,38 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <p>应用场景:</p>
+      <p><img src="media/15700210659906/%E5%9B%BE%E7%89%87.png" alt="Kafka图示"/><br/>
+<img src="media/15700210659906/15700216386343.jpg" alt=""/></p>
 
-<ol>
-<li>每天凌晨跑业务脚本</li>
-<li>设计一个用WEB界面管理管理定时任务的系统。</li>
-</ol>
+<p>回答这个问题，首先你别听到重复消息这个事儿，就一无所知吧，你先大概说一说可能会有哪些重复消费的问题。</p>
 
-<span id="more"></span><!-- more -->
+<p>首先就是比如rabbitmq、rocketmq、kafka，都有可能会出现消费重复消费的问题，正常。因为这问题通常不是mq自己保证的，是给你保证的。然后我们挑一个kafka来举个例子，说说怎么重复消费吧。</p>
 
-<blockquote>
-<p>转自：公众号 - 新亮笔记</p>
-</blockquote>
+<p>kafka实际上有个offset的概念，就是每个消息写进去，都有一个offset，代表他的序号，然后consumer消费了数据之后，每隔一段时间，会把自己消费过的消息的offset提交一下，代表我已经消费过了，下次我要是重启啥的，你就让我继续从上次消费到的offset来继续消费吧。</p>
 
-<h2 id="toc_0">你好，Swoole</h2>
+<p>但是凡事总有意外，比如我们之前生产经常遇到的，就是你有时候重启系统，看你怎么重启了，如果碰到点着急的，直接kill进程了，再重启。这会导致consumer有些消息处理了，但是没来得及提交offset，尴尬了。重启之后，少数消息会再次消费一次。</p>
 
-<p>PHP 的协程高性能网络通信引擎，使用 C/C++ 语言编写，提供了多种通信协议的网络服务器和客户端模块。</p>
+<p><strong>其实重复消费不可怕，可怕的是你没考虑到重复消费之后，怎么保证幂等性。</strong></p>
 
-<p>Swoole 可应用于互联网、移动通信、企业软件、网络游戏、物联网、车联网、智能家庭等领域。</p>
+<p>给你举个例子吧。假设你有个系统，消费一条往数据库里插入一条，要是你一个消息重复两次，你不就插入了两条，这数据不就错了？但是你要是消费到第二次的时候，自己判断一下已经消费过了，直接扔了，不就保留了一条数据？</p>
 
-<p>学习 Swoole 之前，最好先了解下底层知识，比如，线程/进程、IO、TCP/IP协议 等。</p>
+<p>一条数据重复出现两次，数据库里就只有一条数据，这就保证了系统的幂等性</p>
 
-<p>推荐大家读一下《Linux 高性能服务器编程》这本书。</p>
+<p>幂等性，我通俗点说，就一个数据，或者一个请求，给你重复来多次，你得确保对应的数据是不会改变的，不能出错。</p>
 
-<p>这篇文章主要分享 Timer 毫秒精度的定时器。</p>
+<p>那所以第二个问题来了，怎么保证消息队列消费的幂等性？</p>
 
-<p>本地版本：PHP 7.2.6、Swoole 4.3.1。</p>
+<p>其实还是得结合业务来思考，我这里给几个思路：</p>
 
-<h2 id="toc_1">Timer</h2>
+<p>（1）比如你拿个数据要写库，你先根据主键查一下，如果这数据都有了，你就别插入了，update一下好吧</p>
 
-<p>主要有三个方法：</p>
+<p>（2）比如你是写redis，那没问题了，反正每次都是set，天然幂等性</p>
 
-<p>swoole_timer_tick 间隔的时钟控制器</p>
+<p>（3）比如你不是上面两个场景，那做的稍微复杂一点，你需要让生产者发送每条数据的时候，里面加一个全局唯一的id，类似订单id之类的东西，然后你这里消费到了之后，先根据这个id去比如redis里查一下，之前消费过吗？如果没有消费过，你就处理，然后这个id写redis。如果消费过了，那你就别处理了，保证别重复处理相同的消息即可。</p>
 
-<p>swoole_timer_after 指定的时间后执行</p>
+<p>还有比如基于数据库的唯一键来保证重复数据不会重复插入多条，我们之前线上系统就有这个问题，就是拿到数据的时候，每次重启可能会有重复，因为kafka消费者还没来得及提交offset，重复数据拿到了以后我们插入的时候，因为有唯一键约束了，所以重复数据只会插入报错，不会导致数据库中出现脏数据</p>
 
-<p>swoole_timer_clear 删除定时器</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">// 每隔3000ms触发一次
-$timer_id = swoole_timer_tick(3000, function ($timer_id) {
-    echo &quot;tick-&quot; . $timer_id . &quot; 3000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-});
-
-// 30000ms后删除定时器
-swoole_timer_after(30000, function() use ($timer_id) {
-    echo &quot;after 30000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-    swoole_timer_clear($timer_id);
-});
-</code></pre>
-
-<p>运行结果：</p>
-
-<pre><code class="language-text">&gt; php timer.php
-
-tick-1 3000ms-2019-07-23 06:23:51
-tick-1 3000ms-2019-07-23 06:23:54
-tick-1 3000ms-2019-07-23 06:23:57
-after 30000ms-2019-07-23 06:23:57
-</code></pre>
-
-<h2 id="toc_2">应用场景</h2>
-
-<h3 id="toc_3">一、每天凌晨跑业务脚本</h3>
-
-<p>脚本中包括了请求其他业务方或第三方的接口，如果接口超时无响应或没有数据返回，需要进行重试。</p>
-
-<p>重试机制为：每5隔分钟再发送一次请求，最多尝试5次，在5次内成功停止该任务，5次仍失败也停止该任务。</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">function requestUrl($url) {
-    return false;
-}
-
-$apiUrl = &#39;&#39;;      // api地址
-$exec_time = 0;    // 执行次数
-swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
-    $exec_time++;
-    $result = requestUrl($apiUrl);
-    echo date(&#39;Y-m-d H:i:s&#39;) . &quot; 执行任务中...(&quot; . $exec_time . &quot;)\n&quot;;
-    if ($result) {
-        // 业务代码
-        swoole_timer_clear($timer_id);  // 停止定时器
-        echo date(&#39;Y-m-d H:i:s&#39;) . &#39; 第（&#39; . $exec_time . &quot;）次请求接口任务执行成功\n&quot;;
-    }else {
-        if ($exec_time &gt;= 5) {
-            swoole_timer_clear($timer_id);  // 停止定时器
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，已失败5次，停止执行\n&quot;;
-        } else {
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，5分钟后再次尝试\n&quot;;
-        }
-    }
-});
-</code></pre>
-
-<p>运行结果：</p>
-
-<pre><code class="language-text">2019-07-23 08:50:08 执行任务中...(1)
-2019-07-23 08:50:08请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:14 执行任务中...(2)
-2019-07-23 08:50:14请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:20 执行任务中...(3)
-2019-07-23 08:50:20请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:26 执行任务中...(4)
-2019-07-23 08:50:26请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:32 执行任务中...(5)
-2019-07-23 08:50:32请求接口失败，已失败5次，停止执行
-</code></pre>
-
-<h3 id="toc_4">二、设计一个用WEB界面管理管理定时任务的系统。</h3>
-
-<p>Linux Crontab 最小时间粒度为分钟。</p>
-
-<p>PHP Swoole 最小时间粒度为毫秒。</p>
-
-<pre><code class="language-text">--------------
-介绍一下时间配置
-
-    0   1   2   3   4   5
-    |   |   |   |   |   |
-    |   |   |   |   |   +------ day of week (0 - 6) (Sunday=0)
-    |   |   |   |   +------ month (1 - 12)
-    |   |   |   +-------- day of month (1 - 31)
-    |   |   +---------- hour (0 - 23)
-    |   +------------ min (0 - 59)
-    +-------------- sec (0-59)[可省略，如果没有0位,则最小时间粒度是分钟]
-</code></pre>
-
-<p>WEB界面管理</p>
-
-<ul>
-<li>登录、权限管理</li>
-<li>任务管理（增删改查）</li>
-<li>脚本机管理（机器IP地址）</li>
-<li>任务日志</li>
-</ul>
-
-<p>项目地址</p>
-
-<p><a href="https://github.com/osgochina/Donkey">https://github.com/osgochina/Donkey</a></p>
-
-<p>三、比如，监控服务器状况。</p>
-
-<p>参考文档<br/>
-<a href="https://wiki.swoole.com/wiki/page/p-timer.html">https://wiki.swoole.com/wiki/page/p-timer.html</a></p>
+<p>如何保证MQ的消费是幂等性的，需要结合具体的业务来看</p>
 
 
     
@@ -315,16 +201,13 @@ swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15639348696355.html" 
-          title="Previous Post: 第二篇 Swoole Task 的应用">&laquo; 第二篇 Swoole Task 的应用</a>
-      
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15638621513516.html" 
-          title="Next Post: Swoole 文章汇总">Swoole 文章汇总 &raquo;</a>
+          <a  href="15700185588826.html" 
+          title="Next Post: 如何保证消息队列的高可用啊？">如何保证消息队列的高可用啊？ &raquo;</a>
       
       </p>
         </div>
