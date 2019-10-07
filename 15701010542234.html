@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  MySQL实战45讲 - lilaiqun
+  浏览器缓存和数据压缩 - lilaiqun
   
   </title>
   
@@ -65,8 +65,8 @@
 
         <ul class="right" id="search-wrap">
           <li>
-<form target="_blank" onsubmit="return before_search();" action="https://google.com/search" method="get">
-    <input type="hidden" id="search_q" name="q" value="" />
+<form target="_blank" onsubmit="return before_search();" action="https://www.baidu.com/s?" method="get">
+    <input type="hidden" id="search_q" name="wd" value="" />
     <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
 </form>
 </li>
@@ -110,8 +110,6 @@
         
             <li><a href="%E4%B9%A6%E7%B1%8D%E6%8E%A8%E8%8D%90.html">书籍推荐</a></li>
         
-            <li><a href="%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html">极客时间</a></li>
-        
             <li><a href="PHP.html">PHP</a></li>
         
             <li><a href="%E9%9A%8F%E7%AC%94.html">随笔</a></li>
@@ -139,14 +137,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>MySQL实战45讲</h1>
+          <h1>浏览器缓存和数据压缩</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/7/16</span>
+          <span class="date">2019/10/3</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html'>极客时间</a></span>
+              <span class="posted-in"><a href='%E9%AB%98%E5%B9%B6%E5%8F%91.html'>高并发</a></span>
            
          
           <span class="comments">
@@ -159,19 +157,77 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <p>从原理到实战，丁奇带你搞懂MySQL</p>
-
-<blockquote>
-<p>林晓斌<br/>
-网名丁奇，前阿里资深技术专家</p>
-</blockquote>
+      <h2 id="toc_0">HTTP缓存机制</h2>
 
 <span id="more"></span><!-- more -->
 
-<p><img src="http://images.lilaiqun.com/15632653017587.jpg" alt=""/></p>
+<p>缓存分类，HTTP缓存模型中，如果请求成功会有3中情况：</p>
 
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
+<ul>
+<li>200 from cache： 直接从本地缓存中响应，没有向服务器发送请求</li>
+<li>304 Not Modified: 协商缓存，请求头中发送一定的校验数据到服务器，如果服务器数据没有改变浏览器从本地缓存响应，返回304。 快速，发送数据少，只返回一些基本响应头信息，数据量小，不发送实际响应体。</li>
+<li>200 OK： 以上两种缓存都失败</li>
+</ul>
+
+<h2 id="toc_1">200 from cache 本地缓存相关Header</h2>
+
+<p><strong>Pragma</strong>： HTTP1.0,该字段被设置为no-cache时，会告知浏览器禁用本地缓存，每次都想服务器发送请求。</p>
+
+<p><strong>Expires</strong>： 值形如：Thu，31 Dec格林威治时间，告诉浏览器缓存实现的时刻，标记缓存有效，无需发送请求。</p>
+
+<p><strong>Cache-Control</strong>： </p>
+
+<ul>
+<li>no-store： 禁止浏览器缓存响应</li>
+<li>no-cache： 不允许直接使用本地缓存，先发起请求和服务器协商</li>
+<li>max-age=delta-secondes: 告知浏览器该请求响应本地缓存有效的最长期限，以秒为单位。</li>
+</ul>
+
+<p>优先级： Pragma &gt; Cache-Control &gt; Expires</p>
+
+<h2 id="toc_2">304 协商缓存相关Header</h2>
+
+<p><strong>Last-Modified</strong>： 通知浏览器资源的最后修改时间</p>
+
+<p><strong>ETag</strong>： HTTP1.1退出，文件的指纹标识符，如果文件内容修改，指纹会改变</p>
+
+<p><strong>IF-None-Match</strong>： 本地缓存失效，会携带去请求服务端，服务端判断资源是否改变，没有则直接使用本地缓存，返回304</p>
+
+<h2 id="toc_3">适合缓存的内容：</h2>
+
+<p>图片、css</p>
+
+<h2 id="toc_4">使用协商缓存</h2>
+
+<p>HTML文件<br/>
+js、css文件的加载可以加入文件签名拒绝缓存<br/>
+index.css?签名<br/>
+index.签名.js</p>
+
+<h2 id="toc_5">Nginx配置缓存策略</h2>
+
+<p>本地缓存配置<br/>
+add_header指令： 添加状态码2XX和3XX的响应头信息<br/>
+add_header name value [always];<br/>
+可以设置Pragma、Expires、Cache-Control 可以继承</p>
+
+<p>gzip 压缩</p>
+
+<pre><code class="language-text">gzip on
+gzip_buffers 32 4k|16 8K #内存中缓冲几块 大小
+gzip_comp_level [1-9] #推荐6 压缩级别（级别越高，浪费CPU计算资源）
+gzip_min_length 200 #开始压缩的最小长度
+gzip_http_version 1.0|1.1
+gzip_proxied  #设置请求者代理服务器，该如何缓存内容
+gzip_types text/plain applicatin/xml #对那些类型的文件压缩
+gzip_vary on|off  #是否传输gzip压缩标识
+
+
+</code></pre>
+
+<h2 id="toc_6">自动化压缩</h2>
+
+<p>Grunt</p>
 
 
     
@@ -182,16 +238,16 @@
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15632653643382.html" 
-          title="Previous Post: 数据分析实战45讲">&laquo; 数据分析实战45讲</a>
+          <a href="15701041292991.html" 
+          title="Previous Post: 页面静态化">&laquo; 页面静态化</a>
       
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15632623449194.html" 
-          title="Next Post: 从0开始学大数据">从0开始学大数据 &raquo;</a>
+          <a  href="15700996704794.html" 
+          title="Next Post: 减少HTTP请求">减少HTTP请求 &raquo;</a>
       
       </p>
         </div>
@@ -252,8 +308,6 @@
         
             <a href="%E4%B9%A6%E7%B1%8D%E6%8E%A8%E8%8D%90.html"><strong>书籍推荐</strong></a>
         
-            <a href="%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4.html"><strong>极客时间</strong></a>
-        
             <a href="PHP.html"><strong>PHP</strong></a>
         
             <a href="%E9%9A%8F%E7%AC%94.html"><strong>随笔</strong></a>
@@ -275,32 +329,34 @@
           	      
           		      
           			      <li class="post">
-          			        <a href="15700210659906.html">如何保证消息不被重复消费（消费时的幂等性）</a>
+          			        <a href="15701558070255.html">数据库缓存</a>
           			      </li>
           		      
           		    
           		      
           			      <li class="post">
-          			        <a href="15700185588826.html">如何保证消息队列的高可用啊？</a>
+          			        <a href="15701061350831.html">动态语言的并发处理</a>
           			      </li>
           		      
           		    
           		      
           			      <li class="post">
-          			        <a href="15700030762829.html">消息队列技术选型</a>
+          			        <a href="15701041292991.html">页面静态化</a>
           			      </li>
           		      
           		    
           		      
           			      <li class="post">
-          			        <a href="15700028122851.html">目录接口</a>
+          			        <a href="15701010542234.html">浏览器缓存和数据压缩</a>
           			      </li>
           		      
           		    
           		      
           			      <li class="post">
-          			        <a href="15647135075311.html">**面试官：给我讲一下分库分表方案**</a>
+          			        <a href="15700996704794.html">减少HTTP请求</a>
           			      </li>
+          		      
+          		    
           		      
           		    
           		      

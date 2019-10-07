@@ -4,7 +4,7 @@
   <title><![CDATA[lilaiqun]]></title>
   <link href="blog.lilaiqun.com/atom.xml" rel="self"/>
   <link href="blog.lilaiqun.com/"/>
-  <updated>2019-10-02T15:56:29+08:00</updated>
+  <updated>2019-10-03T20:02:07+08:00</updated>
   <id>blog.lilaiqun.com/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -13,13 +13,534 @@
   <generator uri="http://www.mweb.im/">MWeb</generator>
   
   <entry>
+    <title type="html"><![CDATA[数据库缓存]]></title>
+    <link href="blog.lilaiqun.com/15701558070255.html"/>
+    <updated>2019-10-04T10:23:27+08:00</updated>
+    <id>blog.lilaiqun.com/15701558070255.html</id>
+    <content type="html"><![CDATA[
+<p>缓存数据是为了很少或不访问数据库服务器，高并发下，最大程度降低对数据服务器压力。</p>
+
+<h2 id="toc_0">启用Mysql查询缓存</h2>
+
+<pre><code class="language-text">query_cache_type
+0: 不使用查询缓存
+1：始终使用查询缓存
+2：按需使用查询缓存
+
+// 不使用
+select SQL_NO_CACHE * from my_table;
+// 使用
+select SQL_CACHE * from my_table;
+// 缓存大小
+SET GLOBAL query_cache_size = 133333;
+// 查看缓存命中次数
+SHOW STATUS LIKE &#39;Qcache_hits&#39;
+
+FLUSH QUERY CACHE;
+RESET QUERY CACHE;
+FLUSH TABLES;
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Memcache</th>
+<th>Redis</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td>依靠客户端来实现分布式读写</td>
+</tr>
+<tr>
+<td>持久化</td>
+<td>不支持</td>
+<td>快照、AOF</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="toc_1">MySQL数据库层的优化</h2>
+
+<p>优化方向： 数据表数据类型优化、索引优化、SQL语句优化、存储引擎的优化、数据表结构设计的优化、数据库服务器架构的优化</p>
+
+<h3 id="toc_2">数据表数据类型优化</h3>
+
+<p>字段使用什么数据类型 <br/>
+tinyint smallint bigint<br/>
+char varchar</p>
+
+<h2 id="toc_3">索引的优化</h2>
+
+<p>索引创建原则： 不是越多越好，复合索引的前缀原则，全表扫描优化，</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[动态语言的并发处理]]></title>
+    <link href="blog.lilaiqun.com/15701061350831.html"/>
+    <updated>2019-10-03T20:35:35+08:00</updated>
+    <id>blog.lilaiqun.com/15701061350831.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>什么是进程、线程、协程<br/>
+什么事多进程、多线程<br/>
+同步阻塞模型<br/>
+异步非阻塞模型</p>
+</blockquote>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_0">进程的3态模型： 进程在处理器上交替运行，状态在不断发生变化。</h2>
+
+<ul>
+<li>运行：进程的数目小于处理器的数目</li>
+<li>就绪：进程获取除处理器外一切所需资源。就绪进程可以按多个优先级来划分队列。当进程由于时间片用完进入就绪状态，排入低优先级队列；当进程由I/O操作完成而进入就绪状态时，排入高优先级队列。</li>
+<li>阻塞： 等待或睡眠状态，一个进程正在等待某个时间发生（请求IO并等待IO完成）而暂停运行，这是即使把处理器分配给进程也无法运行，故称该进程处于阻塞状态。</li>
+</ul>
+
+<h2 id="toc_1">线程的5态模型：</h2>
+
+<ul>
+<li>新建态： 刚刚被创建没被提交的状态，等待系统完成创建进程的所有必要信息。</li>
+<li>活跃就绪： 进程在主存并可被调度的状态</li>
+<li>终止态：进程已结束运行，回收除进程控制块外的其他资源，并让其他进程从进程控制块中收集有关信息</li>
+<li>静止就绪：进程被换到辅存时的就绪状态，是不能被直接调度的状态，只有主存中没有活跃就绪态进程，或者是挂起就绪态进程具有更高的优先级，系统将把挂起就绪态进程调回主存并转换为活跃就绪。</li>
+<li>活跃阻塞： 进程已在主存，一旦等待时间产生便进入活跃就绪状态。</li>
+</ul>
+
+<p>协程是一种用户态的轻量级线程，协程的调度完全由用户控制。协程拥有自己的寄存器上下文和栈。协程调度切换时，将寄存器上下文和栈保存到其他地方，在切回来的时候，恢复先前保存的寄存器的上下文和栈，直接操作栈则基本没有内核切换的开销，可以不加锁的访问全局变量，所以上下文切换非常快。</p>
+
+<h2 id="toc_2">线程与进程的区别</h2>
+
+<ol>
+<li>线程是进程的一个执行单元，进程内至少有一个线程，他们共享进程的地址空间，而进程由自己的独立的地址空间。</li>
+<li>进程是资源分配和拥有的单位，同一个进程内的线程共享进程的资源。</li>
+<li>线程是处理器调度的基本单位，进程不是</li>
+<li>两者均可并发执行</li>
+</ol>
+
+<h2 id="toc_3">异步非阻塞</h2>
+
+<p>Reactor有4个核心的操作</p>
+
+<ol>
+<li>add添加socket监听到reactor</li>
+<li>set修改事件监听，可以设置监听的类型，如可读、可写</li>
+<li>del从reactor中移除，不再监听事件</li>
+<li>callback 事件发生后对应的处理逻辑，一般在add/set时制定</li>
+</ol>
+
+<p>Nginx：多线程Reactor<br/>
+Swoole：多线程Reactor + 多进程Worker</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[页面静态化]]></title>
+    <link href="blog.lilaiqun.com/15701041292991.html"/>
+    <updated>2019-10-03T20:02:09+08:00</updated>
+    <id>blog.lilaiqun.com/15701041292991.html</id>
+    <content type="html"><![CDATA[
+<h2 id="toc_0">模板引擎Smarty</h2>
+
+<h2 id="toc_1">ob系列函数</h2>
+
+<p>ob_start()<br/>
+ob_get_contents()<br/>
+ob_clean()<br/>
+ob_end_flush()</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[浏览器缓存和数据压缩]]></title>
+    <link href="blog.lilaiqun.com/15701010542234.html"/>
+    <updated>2019-10-03T19:10:54+08:00</updated>
+    <id>blog.lilaiqun.com/15701010542234.html</id>
+    <content type="html"><![CDATA[
+<h2 id="toc_0">HTTP缓存机制</h2>
+
+<span id="more"></span><!-- more -->
+
+<p>缓存分类，HTTP缓存模型中，如果请求成功会有3中情况：</p>
+
+<ul>
+<li>200 from cache： 直接从本地缓存中响应，没有向服务器发送请求</li>
+<li>304 Not Modified: 协商缓存，请求头中发送一定的校验数据到服务器，如果服务器数据没有改变浏览器从本地缓存响应，返回304。 快速，发送数据少，只返回一些基本响应头信息，数据量小，不发送实际响应体。</li>
+<li>200 OK： 以上两种缓存都失败</li>
+</ul>
+
+<h2 id="toc_1">200 from cache 本地缓存相关Header</h2>
+
+<p><strong>Pragma</strong>： HTTP1.0,该字段被设置为no-cache时，会告知浏览器禁用本地缓存，每次都想服务器发送请求。</p>
+
+<p><strong>Expires</strong>： 值形如：Thu，31 Dec格林威治时间，告诉浏览器缓存实现的时刻，标记缓存有效，无需发送请求。</p>
+
+<p><strong>Cache-Control</strong>： </p>
+
+<ul>
+<li>no-store： 禁止浏览器缓存响应</li>
+<li>no-cache： 不允许直接使用本地缓存，先发起请求和服务器协商</li>
+<li>max-age=delta-secondes: 告知浏览器该请求响应本地缓存有效的最长期限，以秒为单位。</li>
+</ul>
+
+<p>优先级： Pragma &gt; Cache-Control &gt; Expires</p>
+
+<h2 id="toc_2">304 协商缓存相关Header</h2>
+
+<p><strong>Last-Modified</strong>： 通知浏览器资源的最后修改时间</p>
+
+<p><strong>ETag</strong>： HTTP1.1退出，文件的指纹标识符，如果文件内容修改，指纹会改变</p>
+
+<p><strong>IF-None-Match</strong>： 本地缓存失效，会携带去请求服务端，服务端判断资源是否改变，没有则直接使用本地缓存，返回304</p>
+
+<h2 id="toc_3">适合缓存的内容：</h2>
+
+<p>图片、css</p>
+
+<h2 id="toc_4">使用协商缓存</h2>
+
+<p>HTML文件<br/>
+js、css文件的加载可以加入文件签名拒绝缓存<br/>
+index.css?签名<br/>
+index.签名.js</p>
+
+<h2 id="toc_5">Nginx配置缓存策略</h2>
+
+<p>本地缓存配置<br/>
+add_header指令： 添加状态码2XX和3XX的响应头信息<br/>
+add_header name value [always];<br/>
+可以设置Pragma、Expires、Cache-Control 可以继承</p>
+
+<p>gzip 压缩</p>
+
+<pre><code class="language-text">gzip on
+gzip_buffers 32 4k|16 8K #内存中缓冲几块 大小
+gzip_comp_level [1-9] #推荐6 压缩级别（级别越高，浪费CPU计算资源）
+gzip_min_length 200 #开始压缩的最小长度
+gzip_http_version 1.0|1.1
+gzip_proxied  #设置请求者代理服务器，该如何缓存内容
+gzip_types text/plain applicatin/xml #对那些类型的文件压缩
+gzip_vary on|off  #是否传输gzip压缩标识
+
+
+</code></pre>
+
+<h2 id="toc_6">自动化压缩</h2>
+
+<p>Grunt</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[减少HTTP请求]]></title>
+    <link href="blog.lilaiqun.com/15700996704794.html"/>
+    <updated>2019-10-03T18:47:50+08:00</updated>
+    <id>blog.lilaiqun.com/15700996704794.html</id>
+    <content type="html"><![CDATA[
+<h2 id="toc_0">为什么要减少？</h2>
+
+<p>80%的时间花在html文档所引用的组件（图片、css、script等）进行的HTTP请求上。</p>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_1">HTTP链接产生的开销</h2>
+
+<p>域名解析、TCP连接、发送请求、等待、下载资源、解析时间</p>
+
+<p><strong>图片地图</strong></p>
+
+<pre><code class="language-text">&lt;img usemap=&quot;#map1&quot;&gt;
+&lt;map name=&quot;map1&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HOME&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;GIFT&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;Cart&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HELP&quot;&gt;
+
+&lt;/map&gt;
+</code></pre>
+
+<p><strong>css精灵</strong></p>
+
+<p>background-position属性</p>
+
+<p><strong>合并js脚本和样式表</strong></p>
+
+<p><strong>使用Base64编码减少页面请求数</strong></p>
+
+<p>通过Base64编码方式将图片直接嵌入网页中</p>
+
+<pre><code class="language-text">&lt;img src=&quot;data:image/gif;base64,/...&quot;&gt;
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Web资源防盗链]]></title>
+    <link href="blog.lilaiqun.com/15700981798015.html"/>
+    <updated>2019-10-03T18:22:59+08:00</updated>
+    <id>blog.lilaiqun.com/15700981798015.html</id>
+    <content type="html"><![CDATA[
+<p>常见的就是小站盗用大站的图片、音乐、视频、软件的资源<br/>
+通过盗链的方法可以减轻自己服务器的负担，真实空间来自别人的服务器</p>
+
+<p>工作原理：<br/>
+通过Referer或者签名计算（规定的加密数字）</p>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_0">1.通过Nginx配置</h2>
+
+<p>Nginx模块 ngx_http_referer_module 用来阻挡来源非法的域名请求<br/>
+Nginx指令 valid_referers, 全局变量$invalid_referer </p>
+
+<pre><code class="language-text">valid_referers none | blocked | server_names | string;
+
+// 参数详情：
+none: &quot;Referer&quot; 来源头部为空的情况
+blocked: &quot;Referer&quot; 来源头部不为空，但是里面的值被代理或防火墙删除了，这些值都不以http:// https://开头
+server_names:  &quot;Referer&quot; 来源头部包含当前的server_names
+</code></pre>
+
+<p>简单示例：</p>
+
+<pre><code class="language-text">location ~ .*\.(gif|jpg|png|flv|swf|rar|zip)$
+{
+    valid_referers none blocked lilaiqun.com *.lilaiqun.com;
+    if ($invalid_referer) 
+    {
+        #return 403;
+        rewite ^/ http://www.lilaiqun.com/403.jpg;
+    }
+}
+</code></pre>
+
+<h2 id="toc_1">2.使用加密签名</h2>
+
+<p>使用第三方模块HttpAccessKeyModule实现Nginx防盗链<br/>
+accesskey on|off 模块开关<br/>
+accesskey_hashmethod md5|sha-1 签名加密方式<br/>
+accesskey_arg GET参数名称<br/>
+accesskey_signature 加密规则</p>
+
+<pre><code class="language-text">location ~ .*\.(gif|jpg|png|flv|swf|rar|zip)$
+{
+    accesskey on;
+    accesskey_hashmethod md5;
+    accesskey_arg &quot;key&quot;;
+    accesskey_signature &quot;mypass$remote_addr&quot;;
+}
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[高并发结构]]></title>
+    <link href="blog.lilaiqun.com/15700944894509.html"/>
+    <updated>2019-10-03T17:21:29+08:00</updated>
+    <id>blog.lilaiqun.com/15700944894509.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>并发：相同时间点，有多少个访问同时到来。一个系统日PV在千万以上，有可能是一个高并发系统<br/>
+QPS：每秒钟请求或者查询的数量，每秒响应的请求量<br/>
+吞吐量：单位时间内处理的请求数量</p>
+</blockquote>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_0">高并发的问题，我们具体该关心什么？</h2>
+
+<p>（总PV数 * 0.8）/ (6*3600 * 0.2) = 峰值每秒请求数（QPS）<br/>
+80%的访问量集中在20%的时间</p>
+
+<h2 id="toc_1">高并发解决方案案例</h2>
+
+<p>流量优化： <a href="15700981798015.html">Web资源防盗链</a><br/>
+前端优化： <a href="15700996704794.html">减少HTTP请求</a>、添加异步请求、<a href="15701010542234.html">浏览器缓存和数据压缩</a>、CDN加速、建立图片服务器<br/>
+服务端优化： <a href="15701041292991.html">页面静态化</a>、并发处理（多线程异步、队列异步处理）<br/>
+数据库优化： <a href="15701558070255.html">数据库缓存</a>、分库分表、分区操作、读写分离<br/>
+Web服务器优化： 负载均衡</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[如何解决消息队列中的延迟]]></title>
+    <link href="blog.lilaiqun.com/15700896906629.html"/>
+    <updated>2019-10-03T16:01:30+08:00</updated>
+    <id>blog.lilaiqun.com/15700896906629.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>提问： 如何解决消息队列的延时以及过期失效问题？消息队列满了以后该怎么处理？有几百万消息持续积压几小时，说说怎么解决？</p>
+</blockquote>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_0">面试官心里分析</h2>
+
+<p>你看这问法，其实本质针对的场景，都是说，可能你的消费端出了问题，不消费了，或者消费的极其极其慢。接着就坑爹了，可能你的消息队列集群的磁盘都快写满了，都没人消费，这个时候怎么办？或者是整个这就积压了几个小时，你这个时候怎么办？或者是你积压的时间太长了，导致比如rabbitmq设置了消息过期时间后就没了怎么办？</p>
+
+<p>所以就这事儿，其实线上挺常见的，一般不出，一出就是大case，一般常见于，举个例子，消费端每次消费之后要写mysql，结果mysql挂了，消费端hang那儿了，不动了。或者是消费端出了个什么叉子，导致消费速度极其慢。</p>
+
+<h2 id="toc_1">面试题分析</h2>
+
+<p>关于这个事儿，我们一个一个来梳理吧，先假设一个场景，我们现在消费端出故障了，然后大量消息在mq里积压，现在事故了，慌了</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[如何保证消息的顺序性？]]></title>
+    <link href="blog.lilaiqun.com/15700882317067.html"/>
+    <updated>2019-10-03T15:37:11+08:00</updated>
+    <id>blog.lilaiqun.com/15700882317067.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>提问：如何保证消息的顺序性</p>
+</blockquote>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_0">面试题剖析：</h2>
+
+<p>我举个例子，我们以前做过一个mysql binlog同步的系统，压力还是非常大的，日同步数据要达到上亿。mysql -&gt; mysql，常见的一点在于说大数据team，就需要同步一个mysql库过来，对公司的业务系统的数据做各种复杂的操作。</p>
+
+<p>你在mysql里增删改一条数据，对应出来了增删改3条binlog，接着这三条binlog发送到MQ里面，到消费出来依次执行，起码得保证人家是按照顺序来的吧？不然本来是：增加、修改、删除；你楞是换了顺序给执行成删除、修改、增加，不全错了么。</p>
+
+<p>本来这个数据同步过来，应该最后这个数据被删除了；结果你搞错了这个顺序，最后这个数据保留下来了，数据同步就出错了。</p>
+
+<p>先看看顺序会错乱的俩场景</p>
+
+<p>（1）rabbitmq：一个queue，多个consumer，这不明显乱了<br/>
+（2）kafka：一个topic，一个partition，一个consumer，<strong>内部多线程</strong>，这不也明显乱了</p>
+
+<p><img src="http://images.lilaiqun.com/15700893668371.jpg" alt="kafka消息错乱"/></p>
+
+<p>那如何保证消息的顺序性呢？简单简单</p>
+
+<p>（1）rabbitmq：拆分多个queue，每个queue一个consumer，就是多一些queue而已，确实是麻烦点；或者就一个queue但是对应一个consumer，然后这个consumer内部用内存队列做排队，然后分发给底层不同的worker来处理</p>
+
+<p>（2）kafka：一个topic，一个partition，一个consumer，内部单线程消费，写N个内存queue，然后N个线程分别消费一个内存queue即可</p>
+
+<p><img src="http://images.lilaiqun.com/15700892292208.jpg" alt="kafka消息错乱解决方案"/></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[如何保证消息队列的可靠性（消息不丢）]]></title>
+    <link href="blog.lilaiqun.com/15700740718336.html"/>
+    <updated>2019-10-03T11:41:11+08:00</updated>
+    <id>blog.lilaiqun.com/15700740718336.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>提问： 如何保证消息的可靠性传输（如何处理消息丢失的问题）？</p>
+</blockquote>
+
+<span id="more"></span><!-- more -->
+
+<p>如果说你这个是用mq来传递非常核心的消息，比如说计费，扣费的一些消息，因为我以前设计和研发过一个公司非常核心的广告平台，计费系统，计费系统是很重的一个业务，操作是很耗时的。所以说广告系统整体的架构里面，实际上是将计费做成异步化的，然后中间就是加了一个MQ。</p>
+
+<p>我们当时为了确保说这个MQ传递过程中绝对不会把计费消息给弄丢，花了很多的精力。广告主投放了一个广告，明明说好了，用户点击一次扣费1块钱。结果要是用户动不动点击了一次，扣费的时候搞的消息丢了，我们公司就会不断的少几块钱，几块钱，积少成多，这个就对公司是一个很大的损失。</p>
+
+<h2 id="toc_0">面试题剖析</h2>
+
+<p>这个丢数据，mq一般分为两种，要么是mq自己弄丢了，要么是我们消费的时候弄丢了。咱们从rabbitmq和kafka分别来分析一下吧</p>
+
+<p>rabbitmq这种mq，一般来说都是承载公司的核心业务的，数据是绝对不能弄丢的</p>
+
+<h3 id="toc_1">1.Rabbitmq</h3>
+
+<p><img src="http://images.lilaiqun.com/15700881424752.jpg" alt=""/></p>
+
+<p>1）生产者弄丢了数据</p>
+
+<p>生产者将数据发送到rabbitmq的时候，可能数据就在半路给搞丢了，因为网络啥的问题，都有可能。</p>
+
+<p>此时可以选择用rabbitmq提供的事务功能，就是生产者发送数据之前开启rabbitmq事务（channel.txSelect），然后发送消息，如果消息没有成功被rabbitmq接收到，那么生产者会收到异常报错，此时就可以回滚事务（channel.txRollback），然后重试发送消息；如果收到了消息，那么可以提交事务（channel.txCommit）。但是问题是，rabbitmq事务机制一搞，基本上吞吐量会下来，因为太耗性能。</p>
+
+<p>所以一般来说，如果你要确保说写rabbitmq的消息别丢，可以开启confirm模式，在生产者那里设置开启confirm模式之后，你每次写的消息都会分配一个唯一的id，然后如果写入了rabbitmq中，rabbitmq会给你回传一个ack消息，告诉你说这个消息ok了。如果rabbitmq没能处理这个消息，会回调你一个nack接口，告诉你这个消息接收失败，你可以重试。而且你可以结合这个机制自己在内存里维护每个消息id的状态，如果超过一定时间还没接收到这个消息的回调，那么你可以重发。</p>
+
+<p>事务机制和cnofirm机制最大的不同在于，事务机制是同步的，你提交一个事务之后会阻塞在那儿，但是confirm机制是异步的，你发送个消息之后就可以发送下一个消息，然后那个消息rabbitmq接收了之后会异步回调你一个接口通知你这个消息接收到了。</p>
+
+<p>所以一般在生产者这块避免数据丢失，都是用confirm机制的。</p>
+
+<p>2）rabbitmq弄丢了数据</p>
+
+<p>就是rabbitmq自己弄丢了数据，这个你必须开启rabbitmq的持久化，就是消息写入之后会持久化到磁盘，哪怕是rabbitmq自己挂了，恢复之后会自动读取之前存储的数据，一般数据不会丢。除非极其罕见的是，rabbitmq还没持久化，自己就挂了，可能导致少量数据会丢失的，但是这个概率较小。</p>
+
+<p>设置持久化有两个步骤，第一个是创建queue的时候将其设置为持久化的，这样就可以保证rabbitmq持久化queue的元数据，但是不会持久化queue里的数据；第二个是发送消息的时候将消息的deliveryMode设置为2，就是将消息设置为持久化的，此时rabbitmq就会将消息持久化到磁盘上去。必须要同时设置这两个持久化才行，rabbitmq哪怕是挂了，再次重启，也会从磁盘上重启恢复queue，恢复这个queue里的数据。</p>
+
+<p>而且持久化可以跟生产者那边的confirm机制配合起来，只有消息被持久化到磁盘之后，才会通知生产者ack了，所以哪怕是在持久化到磁盘之前，rabbitmq挂了，数据丢了，生产者收不到ack，你也是可以自己重发的。</p>
+
+<p>哪怕是你给rabbitmq开启了持久化机制，也有一种可能，就是这个消息写到了rabbitmq中，但是还没来得及持久化到磁盘上，结果不巧，此时rabbitmq挂了，就会导致内存里的一点点数据会丢失。</p>
+
+<p>3）消费端弄丢了数据</p>
+
+<p>rabbitmq如果丢失了数据，主要是因为你消费的时候，刚消费到，还没处理，结果进程挂了，比如重启了，那么就尴尬了，rabbitmq认为你都消费了，这数据就丢了。</p>
+
+<p>这个时候得用rabbitmq提供的ack机制，简单来说，就是你关闭rabbitmq自动ack，可以通过一个api来调用就行，然后每次你自己代码里确保处理完的时候，再程序里ack一把。这样的话，如果你还没处理完，不就没有ack？那rabbitmq就认为你还没处理完，这个时候rabbitmq会把这个消费分配给别的consumer去处理，消息是不会丢的。</p>
+
+<h3 id="toc_2">2.kafka</h3>
+
+<p><img src="http://images.lilaiqun.com/15700881304080.jpg" alt=""/></p>
+
+<p>1）消费端弄丢了数据</p>
+
+<p>唯一可能导致消费者弄丢数据的情况，就是说，你那个消费到了这个消息，然后消费者那边自动提交了offset，让kafka以为你已经消费好了这个消息，其实你刚准备处理这个消息，你还没处理，你自己就挂了，此时这条消息就丢咯。</p>
+
+<p>这不是一样么，大家都知道kafka会自动提交offset，那么只要关闭自动提交offset，在处理完之后自己手动提交offset，就可以保证数据不会丢。但是此时确实还是会重复消费，比如你刚处理完，还没提交offset，结果自己挂了，此时肯定会重复消费一次，自己保证幂等性就好了。</p>
+
+<p>生产环境碰到的一个问题，就是说我们的kafka消费者消费到了数据之后是写到一个内存的queue里先缓冲一下，结果有的时候，你刚把消息写入内存queue，然后消费者会自动提交offset。</p>
+
+<p>然后此时我们重启了系统，就会导致内存queue里还没来得及处理的数据就丢失了</p>
+
+<p>2）kafka弄丢了数据</p>
+
+<p>这块比较常见的一个场景，就是kafka某个broker宕机，然后重新选举partiton的leader时。大家想想，要是此时其他的follower刚好还有些数据没有同步，结果此时leader挂了，然后选举某个follower成leader之后，他不就少了一些数据？这就丢了一些数据啊。</p>
+
+<p>生产环境也遇到过，我们也是，之前kafka的leader机器宕机了，将follower切换为leader之后，就会发现说这个数据就丢了</p>
+
+<p>所以此时一般是要求起码设置如下4个参数：</p>
+
+<p>给这个topic设置replication.factor参数：这个值必须大于1，要求每个partition必须有至少2个副本</p>
+
+<p>在kafka服务端设置min.insync.replicas参数：这个值必须大于1，这个是要求一个leader至少感知到有至少一个follower还跟自己保持联系，没掉队，这样才能确保leader挂了还有一个follower吧</p>
+
+<p>在producer端设置acks=all：这个是要求每条数据，必须是写入所有replica之后，才能认为是写成功了</p>
+
+<p>在producer端设置retries=MAX（很大很大很大的一个值，无限次重试的意思）：这个是要求一旦写入失败，就无限重试，卡在这里了</p>
+
+<p>我们生产环境就是按照上述要求配置的，这样配置之后，至少在kafka broker端就可以保证在leader所在broker发生故障，进行leader切换时，数据不会丢失</p>
+
+<p>3）生产者会不会弄丢数据</p>
+
+<p>如果按照上述的思路设置了ack=all，一定不会丢，要求是，你的leader接收到消息，所有的follower都同步到了消息之后，才认为本次写成功了。如果没满足这个条件，生产者会自动不断的重试，重试无限次。</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[如何保证消息不被重复消费（消费时的幂等性）]]></title>
     <link href="blog.lilaiqun.com/15700210659906.html"/>
     <updated>2019-10-02T20:57:45+08:00</updated>
     <id>blog.lilaiqun.com/15700210659906.html</id>
     <content type="html"><![CDATA[
-<p><img src="media/15700210659906/%E5%9B%BE%E7%89%87.png" alt="Kafka图示"/><br/>
-<img src="media/15700210659906/15700216386343.jpg" alt=""/></p>
+<span id="more"></span><!-- more -->
+
+<p><img src="http://images.lilaiqun.com/%E5%9B%BE%E7%89%87.png" alt="Kafka图示"/><br/>
+<img src="http://images.lilaiqun.com/15700216386343.jpg" alt=""/></p>
 
 <p>回答这个问题，首先你别听到重复消息这个事儿，就一无所知吧，你先大概说一说可能会有哪些重复消费的问题。</p>
 
@@ -66,6 +587,8 @@
 
 MQ的高可用性怎么保证？ 
 </code></pre>
+
+<span id="more"></span><!-- more -->
 
 <h2 id="toc_0">1. RabbitMQ的高可用</h2>
 
@@ -133,6 +656,8 @@ MQ的高可用性怎么保证？
 <h2 id="toc_0">1.为何使用消息队列</h2>
 
 <p><code>解耦、异步、消峰</code></p>
+
+<span id="more"></span><!-- more -->
 
 <h2 id="toc_1">2.缺点</h2>
 
@@ -237,7 +762,7 @@ Zend虚拟机</p>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[**面试官：给我讲一下分库分表方案**]]></title>
+    <title type="html"><![CDATA[面试官：给我讲一下分库分表方案]]></title>
     <link href="blog.lilaiqun.com/15647135075311.html"/>
     <updated>2019-08-02T10:38:27+08:00</updated>
     <id>blog.lilaiqun.com/15647135075311.html</id>
@@ -960,284 +1485,6 @@ swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
 
 <p>第十篇：压测 swoole_websocket_server 性能<br/>
 <a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835077&amp;idx=1&amp;sn=26e3db1a758409b7d2fdf82698094c47&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835077&amp;idx=1&amp;sn=26e3db1a758409b7d2fdf82698094c47&amp;scene=21#wechat_redirect</a></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[深入浅出gRPC]]></title>
-    <link href="blog.lilaiqun.com/15633722743311.html"/>
-    <updated>2019-07-17T22:04:34+08:00</updated>
-    <id>blog.lilaiqun.com/15633722743311.html</id>
-    <content type="html"><![CDATA[
-<p>详解gRPC运作机制与原理<br/>
-李林锋<br/>
-《Netty 权威指南》、《分布式服务框架原理与实践》作者。</p>
-
-<span id="more"></span><!-- more -->
-
-<ul>
-<li>01 | gRPC 入门及服务端创建和调用原理</li>
-<li>02 | 客户端创建和调用原理</li>
-<li>03 | gRPC 线程模型分析</li>
-<li>04 | gRPC 服务调用原理</li>
-<li>05 | gRPC 安全性设计</li>
-<li>06 | gRPC 序列化机制</li>
-</ul>
-
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[算法面试通关40讲]]></title>
-    <link href="blog.lilaiqun.com/15633721987028.html"/>
-    <updated>2019-07-17T22:03:18+08:00</updated>
-    <id>blog.lilaiqun.com/15633721987028.html</id>
-    <content type="html"><![CDATA[
-<p>前Facebook工程师带你吃透大厂面试题<br/>
-覃超<br/>
-Sophon Tech创始人，前Facebook工程师，卡内基梅隆大学计算机硕士</p>
-
-<span id="more"></span><!-- more -->
-
-<p><img src="http://images.lilaiqun.com/15633722288813.jpg" alt=""/></p>
-
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Linux性能优化实战]]></title>
-    <link href="blog.lilaiqun.com/15633721257544.html"/>
-    <updated>2019-07-17T22:02:05+08:00</updated>
-    <id>blog.lilaiqun.com/15633721257544.html</id>
-    <content type="html"><![CDATA[
-<p>10分钟帮你找到系统瓶颈<br/>
-倪朋飞<br/>
-微软资深工程师，Kubernetes项目维护者</p>
-
-<span id="more"></span><!-- more -->
-
-<p><img src="http://images.lilaiqun.com/15633721550369.jpg" alt=""/></p>
-
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[数据分析实战45讲]]></title>
-    <link href="blog.lilaiqun.com/15632653643382.html"/>
-    <updated>2019-07-16T16:22:44+08:00</updated>
-    <id>blog.lilaiqun.com/15632653643382.html</id>
-    <content type="html"><![CDATA[
-<p>即学即用的数据分析入门课</p>
-
-<blockquote>
-<p>陈旸<br/>
-清华大学计算机博士</p>
-</blockquote>
-
-<span id="more"></span><!-- more -->
-
-<p><img src="http://images.lilaiqun.com/15632653939858.jpg" alt=""/></p>
-
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[MySQL实战45讲]]></title>
-    <link href="blog.lilaiqun.com/15632650684753.html"/>
-    <updated>2019-07-16T16:17:48+08:00</updated>
-    <id>blog.lilaiqun.com/15632650684753.html</id>
-    <content type="html"><![CDATA[
-<p>从原理到实战，丁奇带你搞懂MySQL</p>
-
-<blockquote>
-<p>林晓斌<br/>
-网名丁奇，前阿里资深技术专家</p>
-</blockquote>
-
-<span id="more"></span><!-- more -->
-
-<p><img src="http://images.lilaiqun.com/15632653017587.jpg" alt=""/></p>
-
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[从0开始学大数据]]></title>
-    <link href="blog.lilaiqun.com/15632623449194.html"/>
-    <updated>2019-07-16T15:32:24+08:00</updated>
-    <id>blog.lilaiqun.com/15632623449194.html</id>
-    <content type="html"><![CDATA[
-<blockquote>
-<p>李智慧<br/>
-同程艺龙交通首席架构师，前Intel大数据架构师，《大型网站技术架构》作者</p>
-</blockquote>
-
-<span id="more"></span><!-- more -->
-
-<p><img src="http://images.lilaiqun.com/15632623473232.jpg" alt=""/></p>
-
-<p>添加微信获取课程<br/>
-<img src="http://images.lilaiqun.com/WechatQR.jpeg" alt=""/></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[贫穷的本质]]></title>
-    <link href="blog.lilaiqun.com/15632618037754.html"/>
-    <updated>2019-07-16T15:23:23+08:00</updated>
-    <id>blog.lilaiqun.com/15632618037754.html</id>
-    <content type="html"><![CDATA[
-<p>关于本书作者：</p>
-
-<blockquote>
-<p>阿比吉特·班纳吉和埃斯特·迪弗洛，两人都是美国麻省理工学院的教授，班纳吉是麻省理工学院福特基金会国际经济学教授，曾任世界银行荣誉顾问。迪弗洛麻省理工学院经济系阿卜杜勒·拉蒂夫·贾米尔扶贫与发展经济学教授，2009年被《经济学人》杂志评为“八大杰出经济学家”之一。</p>
-</blockquote>
-
-<span id="more"></span><!-- more -->
-
-<p>关于本书：</p>
-
-<blockquote>
-<p>本书曾获《金融时报》评选的“年度最佳图书奖”。<br/>
-《贫穷的本质》是两位作者历经15年实证调查写成，它主要讨论的是贫穷的原因，以及对主流“扶贫观念”的反思。</p>
-</blockquote>
-
-<p><strong>穷人为什么这么穷？</strong></p>
-
-<p><strong>一、穷人缺乏有效的避险工具</strong></p>
-
-<ol>
-<li>穷人会生一堆孩子，但生孩子不是观念落后，而是一种理性思考，因为穷人所在的国家往往没有社会保障体系，想规避养老和医疗风险，只能依靠自己的子女，但是子女身上不确定性太多，或者早夭，或者关系不好，或者没能力养老，穷人往往采取多生几个的策略，尽量规避风险。</li>
-<li>婚姻也是一种规避风险的方式。印度的穷人一般会将自己的女儿嫁到不远不近的村庄，如果两个村子太近，气候完全一样，你这里发洪水，我这个也发洪水，谁也帮不上谁。两个村子隔开一段距离，气候条件就不一样了，遇到灾险，不至于全军覆没，还可互相帮助。</li>
-<li>穷人借高利贷，是因为正规金融体系排斥穷人。高利贷的利息高是由风险定价决定的，并非剥削。穷人使用高利贷规避可能出现的灾病风险，几乎不可能脱贫，因为高利贷的利息成本和穷人的违约率“一损俱损”。</li>
-</ol>
-
-<p><strong>二、穷人不做远期规划</strong></p>
-
-<ol>
-<li><p>绝大多数地方的穷人对教育很不重视，即便很多慈善组织跑来给他们建立学校、普及教育的好处，家长们积极性也不高。因为穷人并不确定10个儿女里，哪个可能会给他养老，而偏偏教育是个长期投入，要好多年后才能看到成效。让穷人赌一个遥遥无期的结果，要冒太大风险。他们宁愿把钱花到马上就能见效的事情上，比如买点食物，改善一下伙食。</p></li>
-<li><p>穷人是很穷，连填饱肚子都有困难，如果他们得到慈善机构的粮食补助，但穷人会拿补贴的钱去买电视机、收音机。和我们的直觉相反，对穷人来说，他首要选择不是填饱肚子，而是让自己毫无希望的贫穷生活少一点儿乏味。</p></li>
-<li><p>人的压力和一种叫皮质醇激素水平相关，皮质醇水平越高就代表压力越大。穷人长期处于生存压力中，皮质醇水平很高，这会影响大脑的部分区域，比如前额皮质、类扁桃体等，这些是认知功能的重要区域。所以，长期处于压力之下的穷人，他们不太可能会做出理智的决定、长远的决策。</p></li>
-</ol>
-
-<p><strong>三、穷人充满执拗和偏见</strong></p>
-
-<ol>
-<li><p>穷人会把自己的大部分钱花在健康上，但他们的花销很不科学。比如，穷人特别喜欢用抗生素，而且经常会做一些为时已晚的外科手术。也就是说，穷人平常不会花点小钱预防疾病，而等到健康真的出了大问题了，他们又不惜借钱来拼命治疗。穷人相信一种理论，他们觉得药物直接输送至血液是很重要的，所以，他们觉得输液比口服药物更有效，会大量的使用抗生素。</p></li>
-<li><p>说服穷人父母们让孩子来打疫苗是一件非常困难的事儿，因为他们不相信疫苗，并不是所有没接种的孩子都会感染麻疹，但这事儿在家长们看来就有问题了，接种的和没接种的都没得病啊，说明疫苗没用。接种一种疫苗只能预防一种疾病，其他的疾病可预防不了，受过教育的父母就觉得自己受了骗，以后再也不让孩子打疫苗了。</p></li>
-</ol>
-
-<p><strong>四、我们和穷人思维上没有本质区别</strong></p>
-
-<ol>
-<li><p>很多人一辈子省吃俭用，不办健身卡、不舍得体检，真的检查出大病了，哪怕是晚期，全家人都会四处举债借钱，做各种昂贵的手术，只为延长哪怕几个月的生命。</p></li>
-<li><p>很多年轻人沉迷于网络游戏，荒废工作学习，因为游戏的设计者利用了心理学上刺激反馈的概念，这种机制给你一个短期刺激，做一个动作就会有相应的反馈出现，而工作学习是个苦活，还要长期坚持才能见效，不如游戏里即时刺激有趣。</p></li>
-<li><p>在不懂的事情上，我们一样有偏见，在网上慷慨激昂的反对转基因食品的人，并不清楚转基因到底是什么，只是凭感觉认为人工的东西不如天然。去医院看病，明明看不懂，但主管会觉得医生肯定做不必要的检查了，在我们认知水平达不到的领域，我们也喜欢按直觉和情绪去理解很多东西。</p></li>
-</ol>
-
-<p><strong>总结一下：</strong><br/>
-穷人之所以穷是因为，第一，避险手段太落后，第二，他们只顾眼前，不做任何长远规划，第三，因为认知水平的局限，他们对不懂的东西有太多偏见。其实我们和穷人并没有什么本质的区别，他们犯的错误，我们也在犯。</p>
-
-<p>金句：</p>
-
-<p>穷人会听到这样的声音，“你永远都买不起那台电冰箱，还是喝杯茶吧……”。结果形成了一个恶性循环：对于穷人来说，存钱的吸引力更小，因为在他们看来，目标太遥远了，而且他们知道一路上会遇到很多诱惑。不过，如果不存钱，他们会一直穷下去。放弃短期目标，追求长期目标，需要人的自我控制能力，但自我控制就像一块肌肉：我们用这块肌肉时就会感到劳累，因此穷人很难存下钱也就不足为怪了。</p>
-
-<p>对于生活在安全而干净的家中、躺在舒适沙发上的我们来说，痛斥家长式作风的危害、告诉自己该为自己的生活负责是轻而易举的。对于我们这些生活在富裕世界的人来说，我们目前不正是这种家长式作风的永久受益者么？我们深深扎根于这一体系而浑然不觉。这个体系不仅可以将我们照顾得更好，而且我们也不需要去思考生活中的其他问题。</p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[设为首页 收藏本站]]></title>
-    <link href="blog.lilaiqun.com/15632615375886.html"/>
-    <updated>2019-07-16T15:18:57+08:00</updated>
-    <id>blog.lilaiqun.com/15632615375886.html</id>
-    <content type="html"><![CDATA[
-<pre><code class="language-text">&lt;script&gt;
-    //设为首页
-    function SetHome(obj,url){
-        try{
-            obj.style.behavior=&#39;url(#default#homepage)&#39;;
-            obj.setHomePage(url);
-        }catch(e){
-            if(window.netscape){
-                try{
-                    netscape.security.PrivilegeManager.enablePrivilege(&quot;UniversalXPConnect&quot;);
-                }catch(e){
-                    alert(&quot;抱歉，此操作被浏览器拒绝！\n\n请在浏览器地址栏输入“about:config”并回车然后将[signed.applets.codebase_principal_support]设置为&#39;true&#39;&quot;);
-                }
-            }else{
-                alert(&quot;抱歉，您所使用的浏览器无法完成此操作。\n\n您需要手动将【&quot;+url+&quot;】设置为首页。&quot;);
-            }
-        }
-    }
-
-    //收藏本站
-    function AddFavorite(title, url) {
-        try {
-            window.external.addFavorite(url, title);
-        }
-        catch (e) {
-            try {
-                window.sidebar.addPanel(title, url, &quot;&quot;);
-            }
-            catch (e) {
-                alert(&quot;抱歉，您所使用的浏览器无法完成此操作。\n\n加入收藏失败，请进入新网站后使用Ctrl+D进行添加&quot;);
-            }
-        }
-    }
-&lt;/script&gt;
-</code></pre>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Typora 0.9.9.7.6]]></title>
-    <link href="blog.lilaiqun.com/15632578058179.html"/>
-    <updated>2019-07-16T14:16:45+08:00</updated>
-    <id>blog.lilaiqun.com/15632578058179.html</id>
-    <content type="html"><![CDATA[
-<p><code>极简Markdown编辑器</code>  这款软件可以直观的看到源部分和预览部分，非常的方便。<br/>
-<span id="more"></span><!-- more --></p>
-
-<p><img src="http://images.lilaiqun.com/15632579039227.jpg" alt=""/><br/>
-<img src="http://images.lilaiqun.com/15632579172204.jpg" alt=""/><br/>
-<img src="http://images.lilaiqun.com/15632579242476.jpg" alt=""/><br/>
-<img src="http://images.lilaiqun.com/15632579328177.jpg" alt=""/></p>
-
-<h2 id="toc_0">应用介绍</h2>
-
-<p>Typora是一个功能强大的Markdown编辑器，使用是GFM风格。</p>
-
-<h2 id="toc_1">实时预览</h2>
-
-<p>不像大多数MarkDown编辑器，也不会其窗口拆分为源部分和预览部分。相反，它让你预览您的作品在同一窗口，实时。</p>
-
-<h2 id="toc_2">本机在OS X</h2>
-
-<p>Integerate与Mac系统。支持自动保存，版本控制，拼写检查等。</p>
-
-<h2 id="toc_3">快捷键</h2>
-
-<p>使用快捷键来更改文本格式，轻松。</p>
 
 ]]></content>
   </entry>

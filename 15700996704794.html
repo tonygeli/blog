@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  Swoole学习 - lilaiqun
+  减少HTTP请求 - lilaiqun
   
   </title>
   
@@ -128,174 +128,107 @@
        
 
  <script type="text/javascript">
-	$(function(){
-		$('#menu_item_index').addClass('is_active');
-	});
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
 </script>
 <div class="row">
-	<div class="large-8 medium-8 columns">
-		<div class="markdown-body home-categories">
-		
-			<div class="article">
-                <a class="clearlink" href="15643711302986.html">
-                
-                  <h1>第三篇 Swoole WebSocket 的应用</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15643711302986.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/24</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>减少HTTP请求</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2019/10/3</span>
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15639348696355.html">
-                
-                  <h1>第二篇 Swoole Task 的应用</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>投递一个异步任务到task_worker池中。此函数是非阻塞的，执行完毕会立即返回。Worker进程可以继续处理新的请求。使用Task功能，必须先设置 task_worker_num，并且必须设置Server的onTask和onFinish事件回调函数。</p>
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='%E9%AB%98%E5%B9%B6%E5%8F%91.html'>高并发</a></span>
+           
+         
+          <span class="comments">
+            
 
+            
+          </span>
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15639348696355.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/24</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+        </div>
+      </div><!-- article -->
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15638622569963.html">
-                
-                  <h1>第一篇 Swoole Timer 的应用</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>应用场景:</p>
+      <div class="article-content">
+      <h2 id="toc_0">为什么要减少？</h2>
 
-<ol>
-<li>每天凌晨跑业务脚本</li>
-<li>设计一个用WEB界面管理管理定时任务的系统。</li>
-</ol>
+<p>80%的时间花在html文档所引用的组件（图片、css、script等）进行的HTTP请求上。</p>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_1">HTTP链接产生的开销</h2>
+
+<p>域名解析、TCP连接、发送请求、等待、下载资源、解析时间</p>
+
+<p><strong>图片地图</strong></p>
+
+<pre><code class="language-text">&lt;img usemap=&quot;#map1&quot;&gt;
+&lt;map name=&quot;map1&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HOME&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;GIFT&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;Cart&quot;&gt;
+    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HELP&quot;&gt;
+
+&lt;/map&gt;
+</code></pre>
+
+<p><strong>css精灵</strong></p>
+
+<p>background-position属性</p>
+
+<p><strong>合并js脚本和样式表</strong></p>
+
+<p><strong>使用Base64编码减少页面请求数</strong></p>
+
+<p>通过Base64编码方式将图片直接嵌入网页中</p>
+
+<pre><code class="language-text">&lt;img src=&quot;data:image/gif;base64,/...&quot;&gt;
+</code></pre>
 
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15638622569963.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/23</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+    
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15638621513516.html">
-                
-                  <h1>Swoole 文章汇总</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>第一篇：<a href="15638622569963.html">Swoole Timer 的应用</a><br/>
-第二篇：<a href="15639348696355.html">第二篇 Swoole Task 的应用</a></p>
+      </div>
 
-<p>第三篇：Swoole WebSocket 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect</a></p>
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+          <a href="15701010542234.html" 
+          title="Previous Post: 浏览器缓存和数据压缩">&laquo; 浏览器缓存和数据压缩</a>
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="15700981798015.html" 
+          title="Next Post: Web资源防盗链">Web资源防盗链 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
 
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15638621513516.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/23</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-              
-
-
-			<div class="row">
-			  <div class="large-6 columns">
-			  <p class="text-left" style="padding-top:25px;">
-			   
-			  </p>
-			  </div>
-			  <div class="large-6 columns">
-			<p class="text-right" style="padding-top:25px;">
-			
-			</p>
-			  </div>
-			</div>
-		</div>
-	</div><!-- large 8 -->
 
  <div class="large-4 medium-4 columns">
   <div class="hide-for-small">

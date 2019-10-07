@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  Swoole学习 - lilaiqun
+  数据库缓存 - lilaiqun
   
   </title>
   
@@ -128,174 +128,129 @@
        
 
  <script type="text/javascript">
-	$(function(){
-		$('#menu_item_index').addClass('is_active');
-	});
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
 </script>
 <div class="row">
-	<div class="large-8 medium-8 columns">
-		<div class="markdown-body home-categories">
-		
-			<div class="article">
-                <a class="clearlink" href="15643711302986.html">
-                
-                  <h1>第三篇 Swoole WebSocket 的应用</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15643711302986.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/24</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>数据库缓存</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2019/10/4</span>
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15639348696355.html">
-                
-                  <h1>第二篇 Swoole Task 的应用</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>投递一个异步任务到task_worker池中。此函数是非阻塞的，执行完毕会立即返回。Worker进程可以继续处理新的请求。使用Task功能，必须先设置 task_worker_num，并且必须设置Server的onTask和onFinish事件回调函数。</p>
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='%E9%AB%98%E5%B9%B6%E5%8F%91.html'>高并发</a></span>
+           
+         
+          <span class="comments">
+            
 
+            
+          </span>
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15639348696355.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/24</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+        </div>
+      </div><!-- article -->
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15638622569963.html">
-                
-                  <h1>第一篇 Swoole Timer 的应用</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>应用场景:</p>
+      <div class="article-content">
+      <p>缓存数据是为了很少或不访问数据库服务器，高并发下，最大程度降低对数据服务器压力。</p>
 
-<ol>
-<li>每天凌晨跑业务脚本</li>
-<li>设计一个用WEB界面管理管理定时任务的系统。</li>
-</ol>
+<h2 id="toc_0">启用Mysql查询缓存</h2>
 
+<pre><code class="language-text">query_cache_type
+0: 不使用查询缓存
+1：始终使用查询缓存
+2：按需使用查询缓存
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15638622569963.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/23</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+// 不使用
+select SQL_NO_CACHE * from my_table;
+// 使用
+select SQL_CACHE * from my_table;
+// 缓存大小
+SET GLOBAL query_cache_size = 133333;
+// 查看缓存命中次数
+SHOW STATUS LIKE &#39;Qcache_hits&#39;
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15638621513516.html">
-                
-                  <h1>Swoole 文章汇总</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>第一篇：<a href="15638622569963.html">Swoole Timer 的应用</a><br/>
-第二篇：<a href="15639348696355.html">第二篇 Swoole Task 的应用</a></p>
+FLUSH QUERY CACHE;
+RESET QUERY CACHE;
+FLUSH TABLES;
+</code></pre>
 
-<p>第三篇：Swoole WebSocket 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect</a></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Memcache</th>
+<th>Redis</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td>依靠客户端来实现分布式读写</td>
+</tr>
+<tr>
+<td>持久化</td>
+<td>不支持</td>
+<td>快照、AOF</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="toc_1">MySQL数据库层的优化</h2>
+
+<p>优化方向： 数据表数据类型优化、索引优化、SQL语句优化、存储引擎的优化、数据表结构设计的优化、数据库服务器架构的优化</p>
+
+<h3 id="toc_2">数据表数据类型优化</h3>
+
+<p>字段使用什么数据类型 <br/>
+tinyint smallint bigint<br/>
+char varchar</p>
+
+<h2 id="toc_3">索引的优化</h2>
+
+<p>索引创建原则： 不是越多越好，复合索引的前缀原则，全表扫描优化，</p>
 
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15638621513516.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/7/23</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+    
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-              
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="15701061350831.html" 
+          title="Next Post: 动态语言的并发处理">动态语言的并发处理 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
 
 
-			<div class="row">
-			  <div class="large-6 columns">
-			  <p class="text-left" style="padding-top:25px;">
-			   
-			  </p>
-			  </div>
-			  <div class="large-6 columns">
-			<p class="text-right" style="padding-top:25px;">
-			
-			</p>
-			  </div>
-			</div>
-		</div>
-	</div><!-- large 8 -->
+
 
  <div class="large-4 medium-4 columns">
   <div class="hide-for-small">

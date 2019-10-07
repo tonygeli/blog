@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  第二篇 Swoole Task 的应用 - lilaiqun
+  如何保证消息队列的可靠性（消息不丢） - lilaiqun
   
   </title>
   
@@ -137,14 +137,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>第二篇 Swoole Task 的应用</h1>
+          <h1>如何保证消息队列的可靠性（消息不丢）</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/7/24</span>
+          <span class="date">2019/10/3</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='Swoole%E5%AD%A6%E4%B9%A0.html'>Swoole学习</a></span>
+              <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
            
          
           <span class="comments">
@@ -157,252 +157,89 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <p>投递一个异步任务到task_worker池中。此函数是非阻塞的，执行完毕会立即返回。Worker进程可以继续处理新的请求。使用Task功能，必须先设置 task_worker_num，并且必须设置Server的onTask和onFinish事件回调函数。</p>
+      <blockquote>
+<p>提问： 如何保证消息的可靠性传输（如何处理消息丢失的问题）？</p>
+</blockquote>
 
 <span id="more"></span><!-- more -->
 
-<blockquote>
-<p>转自：公众号 - 新亮笔记</p>
-</blockquote>
+<p>如果说你这个是用mq来传递非常核心的消息，比如说计费，扣费的一些消息，因为我以前设计和研发过一个公司非常核心的广告平台，计费系统，计费系统是很重的一个业务，操作是很耗时的。所以说广告系统整体的架构里面，实际上是将计费做成异步化的，然后中间就是加了一个MQ。</p>
 
-<h1 id="toc_0">一代码</h1>
+<p>我们当时为了确保说这个MQ传递过程中绝对不会把计费消息给弄丢，花了很多的精力。广告主投放了一个广告，明明说好了，用户点击一次扣费1块钱。结果要是用户动不动点击了一次，扣费的时候搞的消息丢了，我们公司就会不断的少几块钱，几块钱，积少成多，这个就对公司是一个很大的损失。</p>
 
-<h2 id="toc_1">server.php</h2>
+<h2 id="toc_0">面试题剖析</h2>
 
-<pre><code class="language-php">&lt;?php
-class Server
-{
-    private $serv;
-    public function __construct()
-    {
-        $this-&gt;serv = new swoole_server(&#39;0.0.0.0&#39;, 9501;
-        $this-&gt;serv-&gt;set([
-            &#39;worker_num&#39; =&gt; 2,  //开启2个worker进程
-            &#39;max_request&#39; =&gt; 4, //每个worker进程 max_request设置为4次
-            &#39;task_worker_num&#39; =&gt; 4, //开启4个task进程
-            &#39;dispatch_mode&#39; =&gt; 2,   //数据包分发策略 - 固定模式
-        ]);
-        $this-&gt;serv-&gt;on(&#39;Start&#39;, [$this, &#39;onStart&#39;]);
-        $this-&gt;serv-&gt;on(&#39;Connect&#39;, [$this, &#39;onConnect&#39;]);
-        $this-&gt;serv-&gt;on(&quot;Receive&quot;, [$this, &#39;onReceive&#39;]);
-        $this-&gt;serv-&gt;on(&quot;Close&quot;, [$this, &#39;onClose&#39;]);
-        $this-&gt;serv-&gt;on(&quot;Task&quot;, [$this, &#39;onTask&#39;]);
-        $this-&gt;serv-&gt;on(&quot;Finish&quot;, [$this, &#39;onFinish&#39;]);
-        $this-&gt;serv-&gt;start();
-    }
+<p>这个丢数据，mq一般分为两种，要么是mq自己弄丢了，要么是我们消费的时候弄丢了。咱们从rabbitmq和kafka分别来分析一下吧</p>
 
-    public function onStart($serv)
-    {
-        echo &quot;#### onStart ####&quot; . PHP_EOL;
-        echo &quot;SWOOLE &quot; . SWOOLE_VERSION . &quot; 服务已启动&quot; . PHP_EOL;
-        echo &quot;master_pid: {$serv-&gt;master_pid}&quot; . PHP_EOL;
-        echo &quot;manager_pid: {$serv-&gt;manager_pid}&quot; . PHP_EOL;
-        echo &quot;########&quot; . PHP_EOL . PHP_EOL;
-    }
+<p>rabbitmq这种mq，一般来说都是承载公司的核心业务的，数据是绝对不能弄丢的</p>
 
-    public function onConnect($serv, $fd) {
-        echo &quot;#### onConnect ####&quot; . PHP_EOL;
-        echo &quot;客户端:&quot; . $fd . &quot; 已连接&quot; . PHP_EOL;
-        echo &quot;########&quot; . PHP_EOL;
-    }
+<h3 id="toc_1">1.Rabbitmq</h3>
 
-    public function onReceive($serv, $fd, $from_id, $data) {
-        echo &quot;#### onReceive ####&quot; . PHP_EOL;
-        echo &quot;worker_pid: {$serv-&gt;worker_pid}&quot; . PHP_EOL;
-        echo &quot;客户端:{$fd} 发来的Email:{$data}&quot; . PHP_EOL;
-        $param = [
-            &#39;fd&#39; =&gt; $fd,
-            &#39;email&#39; =&gt; $data
-        ];
-        $rs = $serv-&gt;task(json_encode($param));
-        if ($rs === false) {
-            echo &quot;任务分配失败 Task &quot; . $rs . PHP_EOL;
-        } else {
-            echo &quot;任务分配成功 Task &quot; . $rs . PHP_EOL;
-        }
-        echo &quot;########&quot; . PHP_EOL . PHP_EOL;
-    }
+<p><img src="http://images.lilaiqun.com/15700881424752.jpg" alt=""/></p>
 
-    public function onTask($serv, $task_id, $from_id, $data) {
-        echo &quot;#### onTask ####&quot; . PHP_EOL;
-        echo &quot;#{$serv-&gt;worker_id} onTask: [PID={$serv-&gt;worker_pid}]: task_id={$task_id}&quot; . PHP_EOL;
-        //业务代码
-        for ($i = 1; $i &lt;= 5; $i++) {
-            sleep(2);
-            echo &quot;Task {$task_id} 已完成了 {$i}/5 的任务&quot; . PHP_EOL;
-        }
-        $data_arr = json_decode($data, true);
+<p>1）生产者弄丢了数据</p>
 
-        $serv-&gt;send($data_arr[&#39;fd&#39;], &#39;Email:&#39; . $data_arr[&#39;email&#39;] . &#39;,发送成功&#39;);
-        $serv-&gt;finish($data);
-        echo &quot;########&quot; . PHP_EOL;
-    }
+<p>生产者将数据发送到rabbitmq的时候，可能数据就在半路给搞丢了，因为网络啥的问题，都有可能。</p>
 
-    public function onFinish($serv, $task_id, $data) {
-        echo &quot;#### onFinish ####&quot; . PHP_EOL;
-        echo &quot;Task {$task_id} 已完成&quot; . PHP_EOL;
-        echo &quot;########&quot; . PHP_EOL;
-    }
+<p>此时可以选择用rabbitmq提供的事务功能，就是生产者发送数据之前开启rabbitmq事务（channel.txSelect），然后发送消息，如果消息没有成功被rabbitmq接收到，那么生产者会收到异常报错，此时就可以回滚事务（channel.txRollback），然后重试发送消息；如果收到了消息，那么可以提交事务（channel.txCommit）。但是问题是，rabbitmq事务机制一搞，基本上吞吐量会下来，因为太耗性能。</p>
 
-    public function onClose($serv, $fd) {
-        echo &quot;Client Close.&quot; . PHP_EOL;
-    }
-}
+<p>所以一般来说，如果你要确保说写rabbitmq的消息别丢，可以开启confirm模式，在生产者那里设置开启confirm模式之后，你每次写的消息都会分配一个唯一的id，然后如果写入了rabbitmq中，rabbitmq会给你回传一个ack消息，告诉你说这个消息ok了。如果rabbitmq没能处理这个消息，会回调你一个nack接口，告诉你这个消息接收失败，你可以重试。而且你可以结合这个机制自己在内存里维护每个消息id的状态，如果超过一定时间还没接收到这个消息的回调，那么你可以重发。</p>
 
-$server = new Server();
-</code></pre>
+<p>事务机制和cnofirm机制最大的不同在于，事务机制是同步的，你提交一个事务之后会阻塞在那儿，但是confirm机制是异步的，你发送个消息之后就可以发送下一个消息，然后那个消息rabbitmq接收了之后会异步回调你一个接口通知你这个消息接收到了。</p>
 
-<p>client.php</p>
+<p>所以一般在生产者这块避免数据丢失，都是用confirm机制的。</p>
 
-<pre><code class="language-php">&lt;?php
-class Client
-{   
-    private $client;
-    
-    public function __construct() {
-        $this-&gt;client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
-        $this-&gt;client-&gt;on(&#39;Connect&#39;, [$this, &#39;onConnect&#39;]);
-        $this-&gt;client-&gt;on(&#39;Receive&#39;, [$this, &#39;onReceive&#39;]);
-        $this-&gt;client-&gt;on(&#39;Close&#39;, [$this, &#39;onClose&#39;]);
-        $this-&gt;client-&gt;on(&#39;Error&#39;, [$this, &#39;onError&#39;]);
-    }
-    
-    public function connect() {
-        if (!$fp = $this-&gt;client-&gt;connect(&#39;127.0.0.1&#39;, 9501, 1)) {
-            echo &quot;Error: {$fp-&gt;errMsg}[{$fp-&gt;errCode}]&quot; . PHP_EOL;
-            return;
-        }
-    }
+<p>2）rabbitmq弄丢了数据</p>
 
-    public function onConnect($cli) {
-        fwrite(STDOUT, &quot;输入Email:&quot;);
-        swoole_event_add(STDIN, function(){
-            fwrite(STDOUT, &quot;输入内容:&quot;);
-            $msg = trim(fgets(STDIN));
-            $this-&gt;send($msg);
-        });
-    }
+<p>就是rabbitmq自己弄丢了数据，这个你必须开启rabbitmq的持久化，就是消息写入之后会持久化到磁盘，哪怕是rabbitmq自己挂了，恢复之后会自动读取之前存储的数据，一般数据不会丢。除非极其罕见的是，rabbitmq还没持久化，自己就挂了，可能导致少量数据会丢失的，但是这个概率较小。</p>
 
-    public function onReceive($cli, $data) {
-        echo PHP_EOL . &quot;Received: &quot; . $data . PHP_EOL; 
-    }
+<p>设置持久化有两个步骤，第一个是创建queue的时候将其设置为持久化的，这样就可以保证rabbitmq持久化queue的元数据，但是不会持久化queue里的数据；第二个是发送消息的时候将消息的deliveryMode设置为2，就是将消息设置为持久化的，此时rabbitmq就会将消息持久化到磁盘上去。必须要同时设置这两个持久化才行，rabbitmq哪怕是挂了，再次重启，也会从磁盘上重启恢复queue，恢复这个queue里的数据。</p>
 
-    public function send($data) {
-        $this-&gt;client-&gt;send($data);
-    }
+<p>而且持久化可以跟生产者那边的confirm机制配合起来，只有消息被持久化到磁盘之后，才会通知生产者ack了，所以哪怕是在持久化到磁盘之前，rabbitmq挂了，数据丢了，生产者收不到ack，你也是可以自己重发的。</p>
 
-    public function onClose($cli) {
-        echo &quot;Client close connection&quot; . PHP_EOL; 
-    }
+<p>哪怕是你给rabbitmq开启了持久化机制，也有一种可能，就是这个消息写到了rabbitmq中，但是还没来得及持久化到磁盘上，结果不巧，此时rabbitmq挂了，就会导致内存里的一点点数据会丢失。</p>
 
-    public function onError() {
+<p>3）消费端弄丢了数据</p>
 
-    }
-}
+<p>rabbitmq如果丢失了数据，主要是因为你消费的时候，刚消费到，还没处理，结果进程挂了，比如重启了，那么就尴尬了，rabbitmq认为你都消费了，这数据就丢了。</p>
 
+<p>这个时候得用rabbitmq提供的ack机制，简单来说，就是你关闭rabbitmq自动ack，可以通过一个api来调用就行，然后每次你自己代码里确保处理完的时候，再程序里ack一把。这样的话，如果你还没处理完，不就没有ack？那rabbitmq就认为你还没处理完，这个时候rabbitmq会把这个消费分配给别的consumer去处理，消息是不会丢的。</p>
 
-$client = new Client();
-$client-&gt;connect();
-</code></pre>
+<h3 id="toc_2">2.kafka</h3>
 
-<h2 id="toc_2">输出</h2>
+<p><img src="http://images.lilaiqun.com/15700881304080.jpg" alt=""/></p>
 
-<pre><code class="language-text"># 1.启动服务端
-&gt; php server.php
+<p>1）消费端弄丢了数据</p>
 
-#### onStart ####
-SWOOLE 1.10.4 服务已启动
-master_pid: 4258
-manager_pid: 4259
-########
+<p>唯一可能导致消费者弄丢数据的情况，就是说，你那个消费到了这个消息，然后消费者那边自动提交了offset，让kafka以为你已经消费好了这个消息，其实你刚准备处理这个消息，你还没处理，你自己就挂了，此时这条消息就丢咯。</p>
 
-# 2.启动客户端
-&gt; php client.php
+<p>这不是一样么，大家都知道kafka会自动提交offset，那么只要关闭自动提交offset，在处理完之后自己手动提交offset，就可以保证数据不会丢。但是此时确实还是会重复消费，比如你刚处理完，还没提交offset，结果自己挂了，此时肯定会重复消费一次，自己保证幂等性就好了。</p>
 
-输入Email: aaa@bb.com
+<p>生产环境碰到的一个问题，就是说我们的kafka消费者消费到了数据之后是写到一个内存的queue里先缓冲一下，结果有的时候，你刚把消息写入内存queue，然后消费者会自动提交offset。</p>
 
-# 3.服务端接收到请求
+<p>然后此时我们重启了系统，就会导致内存queue里还没来得及处理的数据就丢失了</p>
 
-#### onConnect ####
-客户端:1 已连接
-########
-#### onReceive ####
-worker_pid: 4264
-客户端:1 发来的Email:aaa@bb.com
-任务分配成功 Task 0
-########
+<p>2）kafka弄丢了数据</p>
 
-#### onTask ####
-#2 onTask: [PID=4260]: task_id=0
-Task 0 已完成了 1/5 的任务
-Task 0 已完成了 2/5 的任务
-Task 0 已完成了 3/5 的任务
-Task 0 已完成了 4/5 的任务
-Task 0 已完成了 5/5 的任务
-########
-#### onFinish ####
-Task 0 已完成
-########
+<p>这块比较常见的一个场景，就是kafka某个broker宕机，然后重新选举partiton的leader时。大家想想，要是此时其他的follower刚好还有些数据没有同步，结果此时leader挂了，然后选举某个follower成leader之后，他不就少了一些数据？这就丢了一些数据啊。</p>
 
-# 4.客户端收到消息
+<p>生产环境也遇到过，我们也是，之前kafka的leader机器宕机了，将follower切换为leader之后，就会发现说这个数据就丢了</p>
 
-Received: Email:aaa@bb.com,发送成功
-</code></pre>
+<p>所以此时一般是要求起码设置如下4个参数：</p>
 
-<h2 id="toc_3">查看运行中的进程</h2>
+<p>给这个topic设置replication.factor参数：这个值必须大于1，要求每个partition必须有至少2个副本</p>
 
-<p>总共8个进程（1个master进程、1个manager进程、4个task进程、2个worker进程）</p>
+<p>在kafka服务端设置min.insync.replicas参数：这个值必须大于1，这个是要求一个leader至少感知到有至少一个follower还跟自己保持联系，没掉队，这样才能确保leader挂了还有一个follower吧</p>
 
-<pre><code class="language-text">&gt; ps -ef|grep &#39;server.php&#39; | grep -v &#39;grep&#39;
+<p>在producer端设置acks=all：这个是要求每条数据，必须是写入所有replica之后，才能认为是写成功了</p>
 
-501  4258   670   0  1:54下午 ttys003    0:06.90 php server.php
-501  4259  4258   0  1:54下午 ttys003    0:00.00 php server.php
-501  4260  4259   0  1:54下午 ttys003    0:00.01 php server.php
-501  4261  4259   0  1:54下午 ttys003    0:00.00 php server.php
-501  4262  4259   0  1:54下午 ttys003    0:00.00 php server.php
-501  4263  4259   0  1:54下午 ttys003    0:00.00 php server.php
-501  4264  4259   0  1:54下午 ttys003    0:00.01 php server.php
-501  4265  4259   0  1:54下午 ttys003    0:00.00 php server.php
-</code></pre>
+<p>在producer端设置retries=MAX（很大很大很大的一个值，无限次重试的意思）：这个是要求一旦写入失败，就无限重试，卡在这里了</p>
 
-<p>master进程：4258<br/>
-manager进程：4259</p>
+<p>我们生产环境就是按照上述要求配置的，这样配置之后，至少在kafka broker端就可以保证在leader所在broker发生故障，进行leader切换时，数据不会丢失</p>
 
-<h1 id="toc_4">二为什么执行了5次后，worker进程号发生了改变？</h1>
+<p>3）生产者会不会弄丢数据</p>
 
-<p>因为我们设了置worker进程的max_request=4，一个worker进程在完成最大请求次数任务后将自动退出，进程退出会释放所有的内存和资源，这样的机制主要是解决PHP进程内存溢出的问题。</p>
-
-<h1 id="toc_5">三当task执行任务异常，我们kill一个task进程，会再新增一个吗？</h1>
-
-<p>会。</p>
-
-<h1 id="toc_6">四如何设置 task_worker_num ？</h1>
-
-<p>最大值不得超过 SWOOLE_CPU_NUM * 1000。<br/>
-查看本机 CPU 核数：</p>
-
-<pre><code class="language-text">&gt; php -a
-&gt; echo swoole_cpu_num();
-</code></pre>
-
-<p>根据项目的任务量决定的，比如：1秒会产生200个任务，执行每个任务需要500ms。<br/>
-想在1s中执行完成200个任务，需要100个task进程。<br/>
-100 = 200/(1/0.5)</p>
-
-<h1 id="toc_7">五如何设置 worker_num ？</h1>
-
-<p>默认设置为本机的CPU核数，最大不得超过 SWOOLE_CPU_NUM * 1000。<br/>
-比如：1个请求耗时10ms，要提供1000QPS的处理能力，那就必须配置10个进程。<br/>
-10 = 0.01*1000<br/>
-假设每个进程占用40M内存，10个进程就需要占用400M的内存。</p>
-
-<p>扩展</p>
-
-<ul>
-<li>Server-&gt;taskwait</li>
-<li>Server-&gt;taskWaitMulti</li>
-<li>Server-&gt;taskCo</li>
-</ul>
+<p>如果按照上述的思路设置了ack=all，一定不会丢，要求是，你的leader接收到消息，所有的follower都同步到了消息之后，才认为本次写成功了。如果没满足这个条件，生产者会自动不断的重试，重试无限次。</p>
 
 
     
@@ -413,16 +250,16 @@ manager进程：4259</p>
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15643711302986.html" 
-          title="Previous Post: 第三篇 Swoole WebSocket 的应用">&laquo; 第三篇 Swoole WebSocket 的应用</a>
+          <a href="15700882317067.html" 
+          title="Previous Post: 如何保证消息的顺序性？">&laquo; 如何保证消息的顺序性？</a>
       
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15638622569963.html" 
-          title="Next Post: 第一篇 Swoole Timer 的应用">第一篇 Swoole Timer 的应用 &raquo;</a>
+          <a  href="15700210659906.html" 
+          title="Next Post: 如何保证消息不被重复消费（消费时的幂等性）">如何保证消息不被重复消费（消费时的幂等性） &raquo;</a>
       
       </p>
         </div>
