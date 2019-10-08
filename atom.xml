@@ -4,13 +4,174 @@
   <title><![CDATA[lilaiqun]]></title>
   <link href="blog.lilaiqun.com/atom.xml" rel="self"/>
   <link href="blog.lilaiqun.com/"/>
-  <updated>2019-10-03T20:02:07+08:00</updated>
+  <updated>2019-10-07T11:17:46+08:00</updated>
   <id>blog.lilaiqun.com/</id>
   <author>
     <name><![CDATA[]]></name>
     
   </author>
   <generator uri="http://www.mweb.im/">MWeb</generator>
+  
+  <entry>
+    <title type="html"><![CDATA[zval定义]]></title>
+    <link href="blog.lilaiqun.com/15705095538983.html"/>
+    <updated>2019-10-08T12:39:13+08:00</updated>
+    <id>blog.lilaiqun.com/15705095538983.html</id>
+    <content type="html"><![CDATA[
+<p>zval可以表示一切PHP中的数据类型, 所以它包含了一个<code>type</code>字段, 表示这个zval存储的是什么类型的值, 常见的可能选项是<code>IS_NULL</code>, <code>IS_LONG</code>, <code>IS_STRING</code>, <code>IS_ARRAY</code>, <code>IS_OBJECT</code>等等.</p>
+
+<pre><code class="language-c"># 文件 zend_types.h
+struct _zval_struct {
+    zend_value value;   // 8字节
+    union u1;           // 4字节
+    union u2;           // 4字节
+}
+
+# u1
+union {
+    struct {
+        ZEND_ENDIAN_LOHI_4(
+            zend_uchar type,    // type就是下面的17种类型
+            zend_uchar type_flags,
+            zend_uchar const_flags,
+            zend_uchar reserved
+        )
+    } v;
+    uint32_t type_info;
+} u1;
+
+# u2
+union {
+    uint32_t next;              // hash collision chain
+    uint32_t cache_slot;        //literal cache slot
+    uint32_t lineno;            // line number (for ast nodes)
+    uint32_t fe_pos;            // foreach position
+    uint32_t fe_iter_idx;       // foreach iterator index
+    uint32_t access_flags;      // class constant access flags
+    uint32_t property_guard;    // single property guard
+} u2;
+
+typedef union _zend_value {
+    zend_long lval;
+    double dval;
+    zend_refcounted *counted;
+    zend_string *str;
+    zend_array *arr;
+    zend_object *obj;
+    zend_resource *res;
+    zend_reference *ref;
+    zend_ast_ref *ast;
+    zval *zv;
+    void *ptr;
+    zend_class_entry *ce;
+    zend_function *func;
+} zend_value;
+</code></pre>
+
+<h2 id="toc_0">如何确定变量的类型</h2>
+
+<p>PHP7中的zval的类型做了比较大的调整, 总体来说有如下17种类型:</p>
+
+<pre><code class="language-c">/* regular data types */
+#define IS_UNDEF                    0
+#define IS_NULL                     1
+#define IS_FALSE                    2
+#define IS_TRUE                     3
+#define IS_LONG                     4
+#define IS_DOUBLE                   5
+#define IS_STRING                   6
+#define IS_ARRAY                    7
+#define IS_OBJECT                   8
+#define IS_RESOURCE                 9
+#define IS_REFERENCE                10
+ 
+/* constant expressions */
+#define IS_CONSTANT                 11
+#define IS_CONSTANT_AST             12
+ 
+/* fake types */
+#define _IS_BOOL                    13
+#define IS_CALLABLE                 14
+ 
+/* internal types */
+#define IS_INDIRECT                 15
+#define IS_PTR                      17
+</code></pre>
+
+<h2 id="toc_1">php7中赋值</h2>
+
+<p>1.普通赋值  </p>
+
+<p>在php中，定义一个变量<code>$a=&quot;444&quot;</code>，实际上是生成了一个<code>zval</code>，和一个<code>zend_value</code>,然后<code>zval</code>指向这个<code>zend_value</code>来实现对<code>$a=&quot;444&quot;</code>的定义的，然后通过<code>refcount</code>来统计引用的次数。</p>
+
+<p>refcount表示当前有多少个zval指向同一个zend_value</p>
+
+<p>像<code>bool</code>型还有<code>int</code>，<code>double</code>，<code>null</code>变量，他们的直接通过<code>zval</code>保存，不会公用一个<code>zend_value</code>,所以直接使用深拷贝。<br/>
+至于什么是深拷贝，什么是浅拷贝，最直接的区别就是在于<strong>有没有重新生成一个一模一样的zend_value</strong>，详细请参看深拷贝和浅拷贝。</p>
+
+<p>2.引用赋值</p>
+
+<p>php中的引用赋值就是我们常用的引用，例如\(a=&amp;\)b</p>
+
+<p><img src="media/15705095538983/15705125876412.jpg" alt=""/></p>
+
+<h2 id="toc_2">查看zval</h2>
+
+<pre><code class="language-php">&lt;?php
+$a = 2;
+echo $a;
+$b = 1.1;
+echo $b;
+$c = null;
+echo $c;
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[5分钟商学院]]></title>
+    <link href="blog.lilaiqun.com/15704615997009.html"/>
+    <updated>2019-10-07T23:19:59+08:00</updated>
+    <id>blog.lilaiqun.com/15704615997009.html</id>
+    <content type="html"><![CDATA[
+<h2 id="toc_0">概念：信息对称</h2>
+
+<p>所谓信息对称，就是说，在市场条件下，想实现有效的交易，交易双方掌握的信息必须对称，信息如果不对称，掌握信息比较充分的人员，往往会处于比较有利的地位。</p>
+
+<p><strong>运用：场景</strong></p>
+
+<ul>
+<li>新创品牌如何获得市场认可？</li>
+</ul>
+
+<p>你是一个新创品牌，你做的商品的品质并不 比大牌差，你做的产品卖500块，那些大牌 贴上标签就要卖1000块，这500到1000之间的差价，我们称之为叫品牌溢价。很多人 愿意买大品牌1000块的，是因为宁愿多花 500块也要买一个品质有保障的。<br/>
+互联网赋予了你—个可以挑战大品牌的机 会，你只需要选择一个有用户评价的体系， 比如大众点评，比如支付宝，如果你的商品真的很好的话，一个没有品牌的好产品，将有可能迅速战胜一个有品牌的平庸之作。</p>
+
+<p><strong>小结：怎么解决信息不对称的问题？</strong></p>
+
+<p>过去，我们通过品牌连锁经营和担保交易等 等—系列的手段，来解决这个不对称的问 题，但是今天的互联网，给我们提供了—个 全新、高效率地让信息对称的手段，让创造 这些手段的互联网公司，以及善于利用这些 手段的好产品，有机会以小胜大、获得消费 者的认可。信息对称是互联网改变商业世界 的底层逻辑。</p>
+
+<h2 id="toc_1">概念：网络效应</h2>
+
+<p>某种产品对一名用户的价值，取决于使用这 个产品的其他用户的数量，在经济学中，我 们把它称之为：网络效应。用户越多，越有 价值；越有价值，用户越多；不断地积累用 户的黏性。甚至，一旦用户总数突破一个临 界点之后，会最终进入“赢家通吃”的状 态。正如著名的投资人克里斯-迪克森所 说：为工具而来，为网络而留。</p>
+
+<p>微信，使用的人越多，对你就越有价值， 当好友数量达到一定程度时，你们之间就 形成了一张错综复杂的网络。就算有一 天，你打算从微信换到另一个更好用的社 交软件上，也很有可能因为大部分朋友都 在微信上，而不得不回来。</p>
+
+<h2 id="toc_2">概念：边际成本</h2>
+
+<p>边际成本值的是每多生产或者每多卖一件产品，所带来的总成本的增加。边际成本的结构性改变，是互联网经济对传统经济最重要的一个冲击。</p>
+
+<p><strong>案例</strong></p>
+
+<p><strong>苏宁 VS 京东</strong><br/>
+苏宁门店只能服务20公里的用户，服务20公里外的用户需要再开家店。边际成本一定不为0，所以单店是否盈利非常重要。<br/>
+京东商城前期投入巨大，但互联网能覆盖的用户数，理论上是无上限的，所以边际成本不断递减，最终接近于0.</p>
+
+<p>制造业无法像虚拟产品将边际成本将为0，许多产品的趋势逐步变成：实体产品+虚拟服务。比如电视+媒体库，电话机+话费，用降低实体产品的价格方式，促进虚拟服务达到趋近于0的边际成本。</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[数据库缓存]]></title>
@@ -1291,200 +1452,6 @@ manager进程：4259</p>
 <li>Server-&gt;taskWaitMulti</li>
 <li>Server-&gt;taskCo</li>
 </ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[第一篇 Swoole Timer 的应用]]></title>
-    <link href="blog.lilaiqun.com/15638622569963.html"/>
-    <updated>2019-07-23T14:10:56+08:00</updated>
-    <id>blog.lilaiqun.com/15638622569963.html</id>
-    <content type="html"><![CDATA[
-<p>应用场景:</p>
-
-<ol>
-<li>每天凌晨跑业务脚本</li>
-<li>设计一个用WEB界面管理管理定时任务的系统。</li>
-</ol>
-
-<span id="more"></span><!-- more -->
-
-<blockquote>
-<p>转自：公众号 - 新亮笔记</p>
-</blockquote>
-
-<h2 id="toc_0">你好，Swoole</h2>
-
-<p>PHP 的协程高性能网络通信引擎，使用 C/C++ 语言编写，提供了多种通信协议的网络服务器和客户端模块。</p>
-
-<p>Swoole 可应用于互联网、移动通信、企业软件、网络游戏、物联网、车联网、智能家庭等领域。</p>
-
-<p>学习 Swoole 之前，最好先了解下底层知识，比如，线程/进程、IO、TCP/IP协议 等。</p>
-
-<p>推荐大家读一下《Linux 高性能服务器编程》这本书。</p>
-
-<p>这篇文章主要分享 Timer 毫秒精度的定时器。</p>
-
-<p>本地版本：PHP 7.2.6、Swoole 4.3.1。</p>
-
-<h2 id="toc_1">Timer</h2>
-
-<p>主要有三个方法：</p>
-
-<p>swoole_timer_tick 间隔的时钟控制器</p>
-
-<p>swoole_timer_after 指定的时间后执行</p>
-
-<p>swoole_timer_clear 删除定时器</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">// 每隔3000ms触发一次
-$timer_id = swoole_timer_tick(3000, function ($timer_id) {
-    echo &quot;tick-&quot; . $timer_id . &quot; 3000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-});
-
-// 30000ms后删除定时器
-swoole_timer_after(30000, function() use ($timer_id) {
-    echo &quot;after 30000ms-&quot; . date(&quot;Y-m-d H:i:s&quot;) . &quot;\n&quot;;
-    swoole_timer_clear($timer_id);
-});
-</code></pre>
-
-<p>运行结果：</p>
-
-<pre><code class="language-text">&gt; php timer.php
-
-tick-1 3000ms-2019-07-23 06:23:51
-tick-1 3000ms-2019-07-23 06:23:54
-tick-1 3000ms-2019-07-23 06:23:57
-after 30000ms-2019-07-23 06:23:57
-</code></pre>
-
-<h2 id="toc_2">应用场景</h2>
-
-<h3 id="toc_3">一、每天凌晨跑业务脚本</h3>
-
-<p>脚本中包括了请求其他业务方或第三方的接口，如果接口超时无响应或没有数据返回，需要进行重试。</p>
-
-<p>重试机制为：每5隔分钟再发送一次请求，最多尝试5次，在5次内成功停止该任务，5次仍失败也停止该任务。</p>
-
-<p>示例代码：</p>
-
-<pre><code class="language-php">function requestUrl($url) {
-    return false;
-}
-
-$apiUrl = &#39;&#39;;      // api地址
-$exec_time = 0;    // 执行次数
-swoole_timer_tick(6000, function($timer_id) use ($apiUrl, &amp;$exec_time) {
-    $exec_time++;
-    $result = requestUrl($apiUrl);
-    echo date(&#39;Y-m-d H:i:s&#39;) . &quot; 执行任务中...(&quot; . $exec_time . &quot;)\n&quot;;
-    if ($result) {
-        // 业务代码
-        swoole_timer_clear($timer_id);  // 停止定时器
-        echo date(&#39;Y-m-d H:i:s&#39;) . &#39; 第（&#39; . $exec_time . &quot;）次请求接口任务执行成功\n&quot;;
-    }else {
-        if ($exec_time &gt;= 5) {
-            swoole_timer_clear($timer_id);  // 停止定时器
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，已失败5次，停止执行\n&quot;;
-        } else {
-            echo date(&#39;Y-m-d H:i:s&#39;) . &quot;请求接口失败，5分钟后再次尝试\n&quot;;
-        }
-    }
-});
-</code></pre>
-
-<p>运行结果：</p>
-
-<pre><code class="language-text">2019-07-23 08:50:08 执行任务中...(1)
-2019-07-23 08:50:08请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:14 执行任务中...(2)
-2019-07-23 08:50:14请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:20 执行任务中...(3)
-2019-07-23 08:50:20请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:26 执行任务中...(4)
-2019-07-23 08:50:26请求接口失败，5分钟后再次尝试
-2019-07-23 08:50:32 执行任务中...(5)
-2019-07-23 08:50:32请求接口失败，已失败5次，停止执行
-</code></pre>
-
-<h3 id="toc_4">二、设计一个用WEB界面管理管理定时任务的系统。</h3>
-
-<p>Linux Crontab 最小时间粒度为分钟。</p>
-
-<p>PHP Swoole 最小时间粒度为毫秒。</p>
-
-<pre><code class="language-text">--------------
-介绍一下时间配置
-
-    0   1   2   3   4   5
-    |   |   |   |   |   |
-    |   |   |   |   |   +------ day of week (0 - 6) (Sunday=0)
-    |   |   |   |   +------ month (1 - 12)
-    |   |   |   +-------- day of month (1 - 31)
-    |   |   +---------- hour (0 - 23)
-    |   +------------ min (0 - 59)
-    +-------------- sec (0-59)[可省略，如果没有0位,则最小时间粒度是分钟]
-</code></pre>
-
-<p>WEB界面管理</p>
-
-<ul>
-<li>登录、权限管理</li>
-<li>任务管理（增删改查）</li>
-<li>脚本机管理（机器IP地址）</li>
-<li>任务日志</li>
-</ul>
-
-<p>项目地址</p>
-
-<p><a href="https://github.com/osgochina/Donkey">https://github.com/osgochina/Donkey</a></p>
-
-<p>三、比如，监控服务器状况。</p>
-
-<p>参考文档<br/>
-<a href="https://wiki.swoole.com/wiki/page/p-timer.html">https://wiki.swoole.com/wiki/page/p-timer.html</a></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Swoole 文章汇总]]></title>
-    <link href="blog.lilaiqun.com/15638621513516.html"/>
-    <updated>2019-07-23T14:09:11+08:00</updated>
-    <id>blog.lilaiqun.com/15638621513516.html</id>
-    <content type="html"><![CDATA[
-<p>第一篇：<a href="15638622569963.html">Swoole Timer 的应用</a><br/>
-第二篇：<a href="15639348696355.html">第二篇 Swoole Task 的应用</a></p>
-
-<p>第三篇：Swoole WebSocket 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835004&amp;idx=1&amp;sn=d6789002ca8f919258ff21f0d8950fa9&amp;scene=21#wechat_redirect</a></p>
-
-<span id="more"></span><!-- more -->
-
-<p>第四篇：Swoole HTTP 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835017&amp;idx=1&amp;sn=0702c96c7cf0086b8c3d8da9b6bd8160&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835017&amp;idx=1&amp;sn=0702c96c7cf0086b8c3d8da9b6bd8160&amp;scene=21#wechat_redirect</a></p>
-
-<p>第五篇：Swoole 多协议 多端口 的应用<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835038&amp;idx=1&amp;sn=9aa1dd1c76fbdfdae1c110f411c3f9e3&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835038&amp;idx=1&amp;sn=9aa1dd1c76fbdfdae1c110f411c3f9e3&amp;scene=21#wechat_redirect</a></p>
-
-<p>第六篇：Swoole 整合成一个小框架<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835048&amp;idx=1&amp;sn=dc358c5fbc91a73faf4d04b1d45e71eb&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835048&amp;idx=1&amp;sn=dc358c5fbc91a73faf4d04b1d45e71eb&amp;scene=21#wechat_redirect</a></p>
-
-<p>第七篇：Swoole RPC 的实现<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835054&amp;idx=1&amp;sn=26c27656b53923cc3f81a2aeb66c8d2b&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835054&amp;idx=1&amp;sn=26c27656b53923cc3f81a2aeb66c8d2b&amp;scene=21#wechat_redirect</a></p>
-
-<p>第八篇：Swoole MySQL 连接池的实现<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835060&amp;idx=1&amp;sn=cc3e4ae8774338b56389ec3d29fbf69d&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835060&amp;idx=1&amp;sn=cc3e4ae8774338b56389ec3d29fbf69d&amp;scene=21#wechat_redirect</a></p>
-
-<p>第九篇：Swoole Redis 连接池的实现<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835070&amp;idx=1&amp;sn=097c0972f92537ca2f8a68944b8fd8d5&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835070&amp;idx=1&amp;sn=097c0972f92537ca2f8a68944b8fd8d5&amp;scene=21#wechat_redirect</a></p>
-
-<p>第十篇：压测 swoole_websocket_server 性能<br/>
-<a href="https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835077&amp;idx=1&amp;sn=26e3db1a758409b7d2fdf82698094c47&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MjM5NDM4MDIwNw==&amp;mid=2448835077&amp;idx=1&amp;sn=26e3db1a758409b7d2fdf82698094c47&amp;scene=21#wechat_redirect</a></p>
 
 ]]></content>
   </entry>

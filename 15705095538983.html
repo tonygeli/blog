@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  减少HTTP请求 - lilaiqun
+  zval定义 - lilaiqun
   
   </title>
   
@@ -133,14 +133,14 @@
       <div class="markdown-body article-wrap">
        <div class="article">
           
-          <h1>减少HTTP请求</h1>
+          <h1>zval定义</h1>
      
         <div class="read-more clearfix">
-          <span class="date">2019/10/3</span>
+          <span class="date">2019/10/8</span>
 
           <span>posted in&nbsp;</span> 
           
-              <span class="posted-in"><a href='%E9%AB%98%E5%B9%B6%E5%8F%91.html'>高并发</a></span>
+              <span class="posted-in"><a href='PHP%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0.html'>PHP源码学习</a></span>
            
          
           <span class="comments">
@@ -153,39 +153,112 @@
       </div><!-- article -->
 
       <div class="article-content">
-      <h2 id="toc_0">为什么要减少？</h2>
+      <p>zval可以表示一切PHP中的数据类型, 所以它包含了一个<code>type</code>字段, 表示这个zval存储的是什么类型的值, 常见的可能选项是<code>IS_NULL</code>, <code>IS_LONG</code>, <code>IS_STRING</code>, <code>IS_ARRAY</code>, <code>IS_OBJECT</code>等等.</p>
 
-<p>80%的时间花在html文档所引用的组件（图片、css、script等）进行的HTTP请求上。</p>
+<pre><code class="language-c"># 文件 zend_types.h
+struct _zval_struct {
+    zend_value value;   // 8字节
+    union u1;           // 4字节
+    union u2;           // 4字节
+}
 
-<span id="more"></span><!-- more -->
+# u1
+union {
+    struct {
+        ZEND_ENDIAN_LOHI_4(
+            zend_uchar type,    // type就是下面的17种类型
+            zend_uchar type_flags,
+            zend_uchar const_flags,
+            zend_uchar reserved
+        )
+    } v;
+    uint32_t type_info;
+} u1;
 
-<h2 id="toc_1">HTTP链接产生的开销</h2>
+# u2
+union {
+    uint32_t next;              // hash collision chain
+    uint32_t cache_slot;        //literal cache slot
+    uint32_t lineno;            // line number (for ast nodes)
+    uint32_t fe_pos;            // foreach position
+    uint32_t fe_iter_idx;       // foreach iterator index
+    uint32_t access_flags;      // class constant access flags
+    uint32_t property_guard;    // single property guard
+} u2;
 
-<p>域名解析、TCP连接、发送请求、等待、下载资源、解析时间</p>
-
-<p><strong>图片地图</strong></p>
-
-<pre><code class="language-text">&lt;img usemap=&quot;#map1&quot;&gt;
-&lt;map name=&quot;map1&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HOME&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;GIFT&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;Cart&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HELP&quot;&gt;
-
-&lt;/map&gt;
+typedef union _zend_value {
+    zend_long lval;
+    double dval;
+    zend_refcounted *counted;
+    zend_string *str;
+    zend_array *arr;
+    zend_object *obj;
+    zend_resource *res;
+    zend_reference *ref;
+    zend_ast_ref *ast;
+    zval *zv;
+    void *ptr;
+    zend_class_entry *ce;
+    zend_function *func;
+} zend_value;
 </code></pre>
 
-<p><strong>css精灵</strong></p>
+<h2 id="toc_0">如何确定变量的类型</h2>
 
-<p>background-position属性</p>
+<p>PHP7中的zval的类型做了比较大的调整, 总体来说有如下17种类型:</p>
 
-<p><strong>合并js脚本和样式表</strong></p>
+<pre><code class="language-c">/* regular data types */
+#define IS_UNDEF                    0
+#define IS_NULL                     1
+#define IS_FALSE                    2
+#define IS_TRUE                     3
+#define IS_LONG                     4
+#define IS_DOUBLE                   5
+#define IS_STRING                   6
+#define IS_ARRAY                    7
+#define IS_OBJECT                   8
+#define IS_RESOURCE                 9
+#define IS_REFERENCE                10
+ 
+/* constant expressions */
+#define IS_CONSTANT                 11
+#define IS_CONSTANT_AST             12
+ 
+/* fake types */
+#define _IS_BOOL                    13
+#define IS_CALLABLE                 14
+ 
+/* internal types */
+#define IS_INDIRECT                 15
+#define IS_PTR                      17
+</code></pre>
 
-<p><strong>使用Base64编码减少页面请求数</strong></p>
+<h2 id="toc_1">php7中赋值</h2>
 
-<p>通过Base64编码方式将图片直接嵌入网页中</p>
+<p>1.普通赋值  </p>
 
-<pre><code class="language-text">&lt;img src=&quot;data:image/gif;base64,/...&quot;&gt;
+<p>在php中，定义一个变量<code>$a=&quot;444&quot;</code>，实际上是生成了一个<code>zval</code>，和一个<code>zend_value</code>,然后<code>zval</code>指向这个<code>zend_value</code>来实现对<code>$a=&quot;444&quot;</code>的定义的，然后通过<code>refcount</code>来统计引用的次数。</p>
+
+<p>refcount表示当前有多少个zval指向同一个zend_value</p>
+
+<p>像<code>bool</code>型还有<code>int</code>，<code>double</code>，<code>null</code>变量，他们的直接通过<code>zval</code>保存，不会公用一个<code>zend_value</code>,所以直接使用深拷贝。<br/>
+至于什么是深拷贝，什么是浅拷贝，最直接的区别就是在于<strong>有没有重新生成一个一模一样的zend_value</strong>，详细请参看深拷贝和浅拷贝。</p>
+
+<p>2.引用赋值</p>
+
+<p>php中的引用赋值就是我们常用的引用，例如\(a=&amp;\)b</p>
+
+<p><img src="media/15705095538983/15705125876412.jpg" alt=""/></p>
+
+<h2 id="toc_2">查看zval</h2>
+
+<pre><code class="language-php">&lt;?php
+$a = 2;
+echo $a;
+$b = 1.1;
+echo $b;
+$c = null;
+echo $c;
 </code></pre>
 
 
@@ -197,16 +270,13 @@
         <div class="large-6 columns">
         <p class="text-left" style="padding:15px 0px;">
       
-          <a href="15701010542234.html" 
-          title="Previous Post: 浏览器缓存和数据压缩">&laquo; 浏览器缓存和数据压缩</a>
-      
         </p>
         </div>
         <div class="large-6 columns">
       <p class="text-right" style="padding:15px 0px;">
       
-          <a  href="15700981798015.html" 
-          title="Next Post: Web资源防盗链">Web资源防盗链 &raquo;</a>
+          <a  href="15704615997009.html" 
+          title="Next Post: 5分钟商学院">5分钟商学院 &raquo;</a>
       
       </p>
         </div>

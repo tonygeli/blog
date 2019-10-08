@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  减少HTTP请求 - lilaiqun
+  5分钟商学院 - lilaiqun
   
   </title>
   
@@ -124,107 +124,97 @@
        
 
  <script type="text/javascript">
-  $(function(){
-    $('#menu_item_index').addClass('is_active');
-  });
+	$(function(){
+		$('#menu_item_index').addClass('is_active');
+	});
 </script>
 <div class="row">
-  <div class="large-8 medium-8 columns">
-      <div class="markdown-body article-wrap">
-       <div class="article">
-          
-          <h1>减少HTTP请求</h1>
-     
-        <div class="read-more clearfix">
-          <span class="date">2019/10/3</span>
+	<div class="large-8 medium-8 columns">
+		<div class="markdown-body home-categories">
+		
+			<div class="article">
+                <a class="clearlink" href="15704615997009.html">
+                
+                  <h1>5分钟商学院</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<h2 id="toc_0">概念：信息对称</h2>
 
-          <span>posted in&nbsp;</span> 
-          
-              <span class="posted-in"><a href='%E9%AB%98%E5%B9%B6%E5%8F%91.html'>高并发</a></span>
-           
-         
-          <span class="comments">
-            
+<p>所谓信息对称，就是说，在市场条件下，想实现有效的交易，交易双方掌握的信息必须对称，信息如果不对称，掌握信息比较充分的人员，往往会处于比较有利的地位。</p>
 
-            
-          </span>
+<p><strong>运用：场景</strong></p>
 
-        </div>
-      </div><!-- article -->
+<ul>
+<li>新创品牌如何获得市场认可？</li>
+</ul>
 
-      <div class="article-content">
-      <h2 id="toc_0">为什么要减少？</h2>
+<p>你是一个新创品牌，你做的商品的品质并不 比大牌差，你做的产品卖500块，那些大牌 贴上标签就要卖1000块，这500到1000之间的差价，我们称之为叫品牌溢价。很多人 愿意买大品牌1000块的，是因为宁愿多花 500块也要买一个品质有保障的。<br/>
+互联网赋予了你—个可以挑战大品牌的机 会，你只需要选择一个有用户评价的体系， 比如大众点评，比如支付宝，如果你的商品真的很好的话，一个没有品牌的好产品，将有可能迅速战胜一个有品牌的平庸之作。</p>
 
-<p>80%的时间花在html文档所引用的组件（图片、css、script等）进行的HTTP请求上。</p>
+<p><strong>小结：怎么解决信息不对称的问题？</strong></p>
 
-<span id="more"></span><!-- more -->
+<p>过去，我们通过品牌连锁经营和担保交易等 等—系列的手段，来解决这个不对称的问 题，但是今天的互联网，给我们提供了—个 全新、高效率地让信息对称的手段，让创造 这些手段的互联网公司，以及善于利用这些 手段的好产品，有机会以小胜大、获得消费 者的认可。信息对称是互联网改变商业世界 的底层逻辑。</p>
 
-<h2 id="toc_1">HTTP链接产生的开销</h2>
+<h2 id="toc_1">概念：网络效应</h2>
 
-<p>域名解析、TCP连接、发送请求、等待、下载资源、解析时间</p>
+<p>某种产品对一名用户的价值，取决于使用这 个产品的其他用户的数量，在经济学中，我 们把它称之为：网络效应。用户越多，越有 价值；越有价值，用户越多；不断地积累用 户的黏性。甚至，一旦用户总数突破一个临 界点之后，会最终进入“赢家通吃”的状 态。正如著名的投资人克里斯-迪克森所 说：为工具而来，为网络而留。</p>
 
-<p><strong>图片地图</strong></p>
+<p>微信，使用的人越多，对你就越有价值， 当好友数量达到一定程度时，你们之间就 形成了一张错综复杂的网络。就算有一 天，你打算从微信换到另一个更好用的社 交软件上，也很有可能因为大部分朋友都 在微信上，而不得不回来。</p>
 
-<pre><code class="language-text">&lt;img usemap=&quot;#map1&quot;&gt;
-&lt;map name=&quot;map1&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HOME&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;GIFT&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;Cart&quot;&gt;
-    &lt;area shap=&quot;rect&quot; coords=&quot;0,0,31,31&quot; href=&quot;&quot; title=&quot;HELP&quot;&gt;
+<h2 id="toc_2">概念：边际成本</h2>
 
-&lt;/map&gt;
-</code></pre>
+<p>边际成本值的是每多生产或者每多卖一件产品，所带来的总成本的增加。边际成本的结构性改变，是互联网经济对传统经济最重要的一个冲击。</p>
 
-<p><strong>css精灵</strong></p>
+<p><strong>案例</strong></p>
 
-<p>background-position属性</p>
+<p><strong>苏宁 VS 京东</strong><br/>
+苏宁门店只能服务20公里的用户，服务20公里外的用户需要再开家店。边际成本一定不为0，所以单店是否盈利非常重要。<br/>
+京东商城前期投入巨大，但互联网能覆盖的用户数，理论上是无上限的，所以边际成本不断递减，最终接近于0.</p>
 
-<p><strong>合并js脚本和样式表</strong></p>
+<p>制造业无法像虚拟产品将边际成本将为0，许多产品的趋势逐步变成：实体产品+虚拟服务。比如电视+媒体库，电话机+话费，用降低实体产品的价格方式，促进虚拟服务达到趋近于0的边际成本。</p>
 
-<p><strong>使用Base64编码减少页面请求数</strong></p>
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2019/10/7</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='5%E5%88%86%E9%92%9F%E5%95%86%E5%AD%A6%E9%99%A2.html'>5分钟商学院</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
 
-<p>通过Base64编码方式将图片直接嵌入网页中</p>
-
-<pre><code class="language-text">&lt;img src=&quot;data:image/gif;base64,/...&quot;&gt;
-</code></pre>
-
-
-    
-
-      </div>
-
-      <div class="row">
-        <div class="large-6 columns">
-        <p class="text-left" style="padding:15px 0px;">
-      
-          <a href="15701010542234.html" 
-          title="Previous Post: 浏览器缓存和数据压缩">&laquo; 浏览器缓存和数据压缩</a>
-      
-        </p>
-        </div>
-        <div class="large-6 columns">
-      <p class="text-right" style="padding:15px 0px;">
-      
-          <a  href="15700981798015.html" 
-          title="Next Post: Web资源防盗链">Web资源防盗链 &raquo;</a>
-      
-      </p>
-        </div>
-      </div>
-      <div class="comments-wrap">
-        <div class="share-comments">
-          
-
-          
-
-          
-        </div>
-      </div>
-    </div><!-- article-wrap -->
-  </div><!-- large 8 -->
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+              
 
 
-
+			<div class="row">
+			  <div class="large-6 columns">
+			  <p class="text-left" style="padding-top:25px;">
+			   
+			  </p>
+			  </div>
+			  <div class="large-6 columns">
+			<p class="text-right" style="padding-top:25px;">
+			
+			</p>
+			  </div>
+			</div>
+		</div>
+	</div><!-- large 8 -->
 
  <div class="large-4 medium-4 columns">
   <div class="hide-for-small">

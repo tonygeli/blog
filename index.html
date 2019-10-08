@@ -49,8 +49,6 @@
         
         <li id=""><a target="_self" href="index.html">Home</a></li>
         
-        <li id=""><a target="_self" href="极客时间.html">极客时间</a></li>
-        
         <li id=""><a target="_self" href="PHP.html">PHP</a></li>
         
         <li id=""><a target="_self" href="Javascript.html">Javascript</a></li>
@@ -87,8 +85,6 @@
       <ul class="off-canvas-list">
         
         <li><a target="_self" href="index.html">Home</a></li>
-        
-        <li><a target="_self" href="极客时间.html">极客时间</a></li>
         
         <li><a target="_self" href="PHP.html">PHP</a></li>
         
@@ -136,6 +132,211 @@
 	<div class="large-8 medium-8 columns">
 		<div class="markdown-body home-categories">
 		
+			<div class="article">
+                <a class="clearlink" href="15705095538983.html">
+                
+                  <h1>zval定义</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>zval可以表示一切PHP中的数据类型, 所以它包含了一个<code>type</code>字段, 表示这个zval存储的是什么类型的值, 常见的可能选项是<code>IS_NULL</code>, <code>IS_LONG</code>, <code>IS_STRING</code>, <code>IS_ARRAY</code>, <code>IS_OBJECT</code>等等.</p>
+
+<pre><code class="language-c"># 文件 zend_types.h
+struct _zval_struct {
+    zend_value value;   // 8字节
+    union u1;           // 4字节
+    union u2;           // 4字节
+}
+
+# u1
+union {
+    struct {
+        ZEND_ENDIAN_LOHI_4(
+            zend_uchar type,    // type就是下面的17种类型
+            zend_uchar type_flags,
+            zend_uchar const_flags,
+            zend_uchar reserved
+        )
+    } v;
+    uint32_t type_info;
+} u1;
+
+# u2
+union {
+    uint32_t next;              // hash collision chain
+    uint32_t cache_slot;        //literal cache slot
+    uint32_t lineno;            // line number (for ast nodes)
+    uint32_t fe_pos;            // foreach position
+    uint32_t fe_iter_idx;       // foreach iterator index
+    uint32_t access_flags;      // class constant access flags
+    uint32_t property_guard;    // single property guard
+} u2;
+
+typedef union _zend_value {
+    zend_long lval;
+    double dval;
+    zend_refcounted *counted;
+    zend_string *str;
+    zend_array *arr;
+    zend_object *obj;
+    zend_resource *res;
+    zend_reference *ref;
+    zend_ast_ref *ast;
+    zval *zv;
+    void *ptr;
+    zend_class_entry *ce;
+    zend_function *func;
+} zend_value;
+</code></pre>
+
+<h2 id="toc_0">如何确定变量的类型</h2>
+
+<p>PHP7中的zval的类型做了比较大的调整, 总体来说有如下17种类型:</p>
+
+<pre><code class="language-c">/* regular data types */
+#define IS_UNDEF                    0
+#define IS_NULL                     1
+#define IS_FALSE                    2
+#define IS_TRUE                     3
+#define IS_LONG                     4
+#define IS_DOUBLE                   5
+#define IS_STRING                   6
+#define IS_ARRAY                    7
+#define IS_OBJECT                   8
+#define IS_RESOURCE                 9
+#define IS_REFERENCE                10
+ 
+/* constant expressions */
+#define IS_CONSTANT                 11
+#define IS_CONSTANT_AST             12
+ 
+/* fake types */
+#define _IS_BOOL                    13
+#define IS_CALLABLE                 14
+ 
+/* internal types */
+#define IS_INDIRECT                 15
+#define IS_PTR                      17
+</code></pre>
+
+<h2 id="toc_1">php7中赋值</h2>
+
+<p>1.普通赋值  </p>
+
+<p>在php中，定义一个变量<code>$a=&quot;444&quot;</code>，实际上是生成了一个<code>zval</code>，和一个<code>zend_value</code>,然后<code>zval</code>指向这个<code>zend_value</code>来实现对<code>$a=&quot;444&quot;</code>的定义的，然后通过<code>refcount</code>来统计引用的次数。</p>
+
+<p>refcount表示当前有多少个zval指向同一个zend_value</p>
+
+<p>像<code>bool</code>型还有<code>int</code>，<code>double</code>，<code>null</code>变量，他们的直接通过<code>zval</code>保存，不会公用一个<code>zend_value</code>,所以直接使用深拷贝。<br/>
+至于什么是深拷贝，什么是浅拷贝，最直接的区别就是在于<strong>有没有重新生成一个一模一样的zend_value</strong>，详细请参看深拷贝和浅拷贝。</p>
+
+<p>2.引用赋值</p>
+
+<p>php中的引用赋值就是我们常用的引用，例如\(a=&amp;\)b</p>
+
+<p><img src="media/15705095538983/15705125876412.jpg" alt=""/></p>
+
+<h2 id="toc_2">查看zval</h2>
+
+<pre><code class="language-php">&lt;?php
+$a = 2;
+echo $a;
+$b = 1.1;
+echo $b;
+$c = null;
+echo $c;
+</code></pre>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2019/10/8</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='PHP%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0.html'>PHP源码学习</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="15704615997009.html">
+                
+                  <h1>5分钟商学院</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<h2 id="toc_0">概念：信息对称</h2>
+
+<p>所谓信息对称，就是说，在市场条件下，想实现有效的交易，交易双方掌握的信息必须对称，信息如果不对称，掌握信息比较充分的人员，往往会处于比较有利的地位。</p>
+
+<p><strong>运用：场景</strong></p>
+
+<ul>
+<li>新创品牌如何获得市场认可？</li>
+</ul>
+
+<p>你是一个新创品牌，你做的商品的品质并不 比大牌差，你做的产品卖500块，那些大牌 贴上标签就要卖1000块，这500到1000之间的差价，我们称之为叫品牌溢价。很多人 愿意买大品牌1000块的，是因为宁愿多花 500块也要买一个品质有保障的。<br/>
+互联网赋予了你—个可以挑战大品牌的机 会，你只需要选择一个有用户评价的体系， 比如大众点评，比如支付宝，如果你的商品真的很好的话，一个没有品牌的好产品，将有可能迅速战胜一个有品牌的平庸之作。</p>
+
+<p><strong>小结：怎么解决信息不对称的问题？</strong></p>
+
+<p>过去，我们通过品牌连锁经营和担保交易等 等—系列的手段，来解决这个不对称的问 题，但是今天的互联网，给我们提供了—个 全新、高效率地让信息对称的手段，让创造 这些手段的互联网公司，以及善于利用这些 手段的好产品，有机会以小胜大、获得消费 者的认可。信息对称是互联网改变商业世界 的底层逻辑。</p>
+
+<h2 id="toc_1">概念：网络效应</h2>
+
+<p>某种产品对一名用户的价值，取决于使用这 个产品的其他用户的数量，在经济学中，我 们把它称之为：网络效应。用户越多，越有 价值；越有价值，用户越多；不断地积累用 户的黏性。甚至，一旦用户总数突破一个临 界点之后，会最终进入“赢家通吃”的状 态。正如著名的投资人克里斯-迪克森所 说：为工具而来，为网络而留。</p>
+
+<p>微信，使用的人越多，对你就越有价值， 当好友数量达到一定程度时，你们之间就 形成了一张错综复杂的网络。就算有一 天，你打算从微信换到另一个更好用的社 交软件上，也很有可能因为大部分朋友都 在微信上，而不得不回来。</p>
+
+<h2 id="toc_2">概念：边际成本</h2>
+
+<p>边际成本值的是每多生产或者每多卖一件产品，所带来的总成本的增加。边际成本的结构性改变，是互联网经济对传统经济最重要的一个冲击。</p>
+
+<p><strong>案例</strong></p>
+
+<p><strong>苏宁 VS 京东</strong><br/>
+苏宁门店只能服务20公里的用户，服务20公里外的用户需要再开家店。边际成本一定不为0，所以单店是否盈利非常重要。<br/>
+京东商城前期投入巨大，但互联网能覆盖的用户数，理论上是无上限的，所以边际成本不断递减，最终接近于0.</p>
+
+<p>制造业无法像虚拟产品将边际成本将为0，许多产品的趋势逐步变成：实体产品+虚拟服务。比如电视+媒体库，电话机+话费，用降低实体产品的价格方式，促进虚拟服务达到趋近于0的边际成本。</p>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2019/10/7</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='5%E5%88%86%E9%92%9F%E5%95%86%E5%AD%A6%E9%99%A2.html'>5分钟商学院</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
 			<div class="article">
                 <a class="clearlink" href="15701558070255.html">
                 
@@ -665,79 +866,6 @@ MQ的高可用性怎么保证？
                 </div>
               </div><!-- article -->
         
-			<div class="article">
-                <a class="clearlink" href="15700028122851.html">
-                
-                  <h1>目录接口</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>编译与执行<br/>
-词法、语法分析基本原理<br/>
-抽象语法书<br/>
-Zend虚拟机</p>
-
-<h2 id="toc_0">基本语法与扩展编写</h2>
-
-<p><a href="#">各类基础语法的实现</a><br/>
-<a href="#">手把手编写一个PHP扩展</a></p>
-
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                  
-                    <span class="date">2019/10/2</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='PHP%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0.html'>PHP源码学习</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
-
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15647135075311.html">
-                
-                  <h1>面试官：给我讲一下分库分表方案</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15647135075311.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/8/2</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E9%9D%A2%E8%AF%95.html'>面试</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
-
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
               
 
 
@@ -818,6 +946,18 @@ Zend虚拟机</p>
           	      
           		      
           			      <li class="post">
+          			        <a href="15705095538983.html">zval定义</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15704615997009.html">5分钟商学院</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
           			        <a href="15701558070255.html">数据库缓存</a>
           			      </li>
           		      
@@ -831,18 +971,6 @@ Zend虚拟机</p>
           		      
           			      <li class="post">
           			        <a href="15701041292991.html">页面静态化</a>
-          			      </li>
-          		      
-          		    
-          		      
-          			      <li class="post">
-          			        <a href="15701010542234.html">浏览器缓存和数据压缩</a>
-          			      </li>
-          		      
-          		    
-          		      
-          			      <li class="post">
-          			        <a href="15700996704794.html">减少HTTP请求</a>
           			      </li>
           		      
           		    
