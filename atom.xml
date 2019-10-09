@@ -4,7 +4,7 @@
   <title><![CDATA[lilaiqun]]></title>
   <link href="blog.lilaiqun.com/atom.xml" rel="self"/>
   <link href="blog.lilaiqun.com/"/>
-  <updated>2019-10-09T20:26:31+08:00</updated>
+  <updated>2019-10-09T20:33:54+08:00</updated>
   <id>blog.lilaiqun.com/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -785,8 +785,6 @@ accesskey_signature 加密规则</p>
 QPS：每秒钟请求或者查询的数量，每秒响应的请求量<br/>
 吞吐量：单位时间内处理的请求数量</p>
 </blockquote>
-
-<span id="more"></span><!-- more -->
 
 <h2 id="toc_0">高并发的问题，我们具体该关心什么？</h2>
 
