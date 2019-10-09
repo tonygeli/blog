@@ -2,7 +2,17 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
   <loc>blog.lilaiqun.com/</loc>
-  <lastmod>2019-10-08T14:13:28+08:00</lastmod>
+  <lastmod>2019-10-09T20:33:53+08:00</lastmod>
+</url>
+
+<url>
+  <loc>blog.lilaiqun.com/15706131641039.html</loc>
+  <lastmod>2019-10-09T17:26:04+08:00</lastmod>
+</url>
+
+<url>
+  <loc>blog.lilaiqun.com/15706006250325.html</loc>
+  <lastmod>2019-10-09T13:57:05+08:00</lastmod>
 </url>
 
 <url>
@@ -125,11 +135,6 @@
   <lastmod>2019-07-16T15:18:57+08:00</lastmod>
 </url>
 
-<url>
-  <loc>blog.lilaiqun.com/15632578058179.html</loc>
-  <lastmod>2019-07-16T14:16:45+08:00</lastmod>
-</url>
-
 
 <url>
   <loc>blog.lilaiqun.com/996.html</loc>
@@ -138,11 +143,7 @@
 
 
 <url>
-  <loc>blog.lilaiqun.com/%E8%BD%AF%E4%BB%B6%E6%8E%A8%E8%8D%90.html</loc>
-</url>
-
-<url>
-  <loc>blog.lilaiqun.com/Javascript.html</loc>
+  <loc>blog.lilaiqun.com/JS.html</loc>
 </url>
 
 <url>
@@ -167,6 +168,10 @@
 
 <url>
   <loc>blog.lilaiqun.com/%E9%9A%8F%E7%AC%94.html</loc>
+</url>
+
+<url>
+  <loc>blog.lilaiqun.com/%E6%95%B0%E6%8D%AE%E5%BA%93.html</loc>
 </url>
 
 <url>
