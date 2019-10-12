@@ -110,6 +110,8 @@
             <li><a href="%E6%95%B0%E6%8D%AE%E5%BA%93.html">数据库</a></li>
         
             <li><a href="%E9%9D%A2%E8%AF%95.html">面试</a></li>
+        
+            <li><a href="Linux.html">Linux</a></li>
          
 
       </ul>
@@ -131,6 +133,70 @@
 	<div class="large-8 medium-8 columns">
 		<div class="markdown-body home-categories">
 		
+			<div class="article">
+                <a class="clearlink" href="15708513672196.html">
+                
+                  <h1>awk统计访问日志access.log</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	awk统计访问日志access.log
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2019/10/12</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='Linux.html'>Linux</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="15707746132238.html">
+                
+                  <h1>PHP底层的运行机制与原理</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	PHP是一个用C语言实现包含大量组件的软件框架
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2019/10/11</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='PHP%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0.html'>PHP源码学习</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
 			<div class="article">
                 <a class="clearlink" href="15706131641039.html">
                 
@@ -171,40 +237,7 @@
                       
                       <div class="a-content-text">
                         
-                        	<blockquote>
-<p>转自： <a href="https://www.zendstudio.net/archives/php-in_array-s-low-performance/">https://www.zendstudio.net/archives/php-in_array-s-low-performance/</a></p>
-</blockquote>
-
-<pre><code class="language-php">&lt;?php
-$y = &quot;1800&quot;;
-$x = array();
-for($j=0;$j&lt;2000;$j++){
-    $x[]= &quot;{$j}&quot;;
-}
-for($i=0;$i&lt;3000;$i++){
-    if(in_array($y,$x)){
-            continue;
-    }
-}
-</code></pre>
-
-<p>执行：</p>
-
-<pre><code class="language-text">$ time php test.php
-
-real    0m0.986s
-user    0m0.381s
-sys 0m0.016s
-</code></pre>
-
-<p>对的，我们用的就是字符串型的数字，从缓存拿出来就是这样子的啦！所以这里是特意转成字符串的（如果直接是数字，并不会出现这个问题 ，各位可以自行验证）。可以看出时间耗掉了1秒，才3000次循环,后面的sys用时也注定我们用strace不会拿到什么有效信息。</p>
-
-<pre><code class="language-bash">$ strace -ttt -o xxx php test.php
-$ less xxx
-
-
-</code></pre>
-
+                        	PHP函数in_array耗时异常排查
                         
                       </div>
                   </div>
@@ -813,74 +846,6 @@ ob_end_flush()</p>
                 </div>
               </div><!-- article -->
         
-			<div class="article">
-                <a class="clearlink" href="15700740718336.html">
-                
-                  <h1>如何保证消息队列的可靠性（消息不丢）</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<blockquote>
-<p>提问： 如何保证消息的可靠性传输（如何处理消息丢失的问题）？</p>
-</blockquote>
-
-
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700740718336.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/3</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
-
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15700210659906.html">
-                
-                  <h1>如何保证消息不被重复消费（消费时的幂等性）</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700210659906.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/2</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
-
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
               
 
 
@@ -945,6 +910,8 @@ ob_end_flush()</p>
             <a href="%E6%95%B0%E6%8D%AE%E5%BA%93.html"><strong>数据库</strong></a>
         
             <a href="%E9%9D%A2%E8%AF%95.html"><strong>面试</strong></a>
+        
+            <a href="Linux.html"><strong>Linux</strong></a>
          
         </p>
 
@@ -961,6 +928,18 @@ ob_end_flush()</p>
           	      
           		      
           			      <li class="post">
+          			        <a href="15708513672196.html">awk统计访问日志access.log</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
+          			        <a href="15707746132238.html">PHP底层的运行机制与原理</a>
+          			      </li>
+          		      
+          		    
+          		      
+          			      <li class="post">
           			        <a href="15706131641039.html">如何练好SQL</a>
           			      </li>
           		      
@@ -974,18 +953,6 @@ ob_end_flush()</p>
           		      
           			      <li class="post">
           			        <a href="15705095538983.html">zval定义</a>
-          			      </li>
-          		      
-          		    
-          		      
-          			      <li class="post">
-          			        <a href="15704615997009.html">5分钟商学院</a>
-          			      </li>
-          		      
-          		    
-          		      
-          			      <li class="post">
-          			        <a href="15701558070255.html">数据库缓存</a>
           			      </li>
           		      
           		    

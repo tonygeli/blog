@@ -4,7 +4,7 @@
   <title><![CDATA[lilaiqun]]></title>
   <link href="blog.lilaiqun.com/atom.xml" rel="self"/>
   <link href="blog.lilaiqun.com/"/>
-  <updated>2019-10-09T21:16:54+08:00</updated>
+  <updated>2019-10-09T21:23:41+08:00</updated>
   <id>blog.lilaiqun.com/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -13,20 +13,286 @@
   <generator uri="http://www.mweb.im/">MWeb</generator>
   
   <entry>
+    <title type="html"><![CDATA[awk统计访问日志access.log]]></title>
+    <link href="blog.lilaiqun.com/15708513672196.html"/>
+    <updated>2019-10-12T11:36:07+08:00</updated>
+    <id>blog.lilaiqun.com/15708513672196.html</id>
+    <content type="html"><![CDATA[
+<h2 id="toc_0">awk如何使用</h2>
+
+<p>简单文本处理中，功能强大的awk命令。下文详细描述使用方法与示例:</p>
+
+<p>语法：</p>
+
+<pre><code class="language-bash">awk [选项参数] &#39;script&#39; var=value file(s)
+或
+awk [选项参数] -f scriptfile var=value file(s)
+</code></pre>
+
+<h2 id="toc_1">查看最新的访问日志</h2>
+
+<pre><code class="language-bash">$ tail -n 50000 /data1/logs/nginx/access.log
+
+0.012   0.012   10.135.12.135   508 127.0.0.1:9001  12/Oct/2019:10:49:17 +0800 aaadns.com   POST /api/pro HTTP/1.0
+</code></pre>
+
+<p><code>tail</code>查看文件结尾<br/>
+<code>tail -n 50000</code> 查看文件倒数5万条记录</p>
+
+<h2 id="toc_2">正则匹配访问url 包含字符串</h2>
+
+<pre><code class="language-bash">$ awk &#39;{if($10~/separation/) {print substr($10,0,80)}}&#39;
+</code></pre>
+
+<p><code>$0</code> 表示整行记录<br/>
+<code>$10</code>  /api/pro 以空格分隔的第10个字符串<br/>
+<code>if ($10~/separation/)</code>  正则匹配第10个字符串是否包含separation<br/>
+<code>substr($10, 0, 80)</code> 取第10个字符串中0到80个字符</p>
+
+<h2 id="toc_3">url以特定字符分隔</h2>
+
+<pre><code class="language-text">$ awk &#39;{split($0,a,&quot;?&quot;); print a[1]}
+</code></pre>
+
+<p><code>split($0,a,&quot;?&quot;)</code> $0表示输入的字符串，将输入字符串以?分隔，结果保存在a变量中</p>
+
+<h2 id="toc_4">统计所有url的访问次数</h2>
+
+<pre><code class="language-text">tail -n 50000 /data1/logs/nginx/access.log | awk &#39;{if($10~/separation/) {print $10}}&#39; | awk &#39;{split($0,a,&quot;?&quot;); print a[1]}&#39; |sort |uniq -c
+
+   13 /separation/business/getBusin****
+   94 /separation/house/com**
+   13 /separation/house/de**
+   4 /separation/housedetail/click***
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[PHP底层的运行机制与原理]]></title>
+    <link href="blog.lilaiqun.com/15707746132238.html"/>
+    <updated>2019-10-11T14:16:53+08:00</updated>
+    <id>blog.lilaiqun.com/15707746132238.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>转自 <a href="#">https://www.awaimai.com/509.html</a></p>
+</blockquote>
+
+<p>PHP说简单，但是要精通也不是一件简单的事。我们除了会使用之外，还得知道它底层的工作原理。</p>
+
+<p>PHP是一种适用于web开发的动态语言。具体点说，就是<strong>一个用C语言实现包含大量组件的软件框架</strong>。更狭义点看，可以把它认为是一个强大的UI框架。</p>
+
+<p>了解PHP底层实现的目的是什么？动态语言要像用好首先得了解它，内存管理、框架模型值得我们借鉴，通过扩展开发实现更多更强大的功能，优化我们程序的性能。</p>
+
+<h2 id="toc_0">1.PHP的设计理念及特点</h2>
+
+<ul>
+<li><strong>多进程模型</strong>：由于PHP是多进程模型，不同请求间互不干涉，这样保证了一个请求挂掉不会对全盘服务造成影响。当然，随着时代发展，PHP也早已支持多线程模型。</li>
+<li><strong>弱类型语言</strong>：和C/C++、Java、C#等语言不同，PHP是一门弱类型语言。一个变量的类型并不是一开始就确定不变，运行中才会确定并可能发生隐式或显式的类型转换，这种机制的灵活性在web开发中非常方便、高效，具体会在后面PHP变量中详述。</li>
+<li><strong>引擎(Zend)+组件(ext)</strong>的模式降低内部耦合。</li>
+<li><strong>中间层(sapi)</strong> 隔绝web server和PHP。</li>
+<li><strong>语法简单灵活</strong>，没有太多规范。缺点导致风格混杂，但再差的程序员也不会写出太离谱危害全局的程序。</li>
+</ul>
+
+<h2 id="toc_1">2.PHP的四层体系</h2>
+
+<p>PHP的核心架构如下图：</p>
+
+<p><img src="media/15707746132238/15707748099010.jpg" alt=""/></p>
+
+<p>从图上可以看出，PHP从下到上是一个4层体系：</p>
+
+<ol>
+<li><strong>Zend引擎</strong>：Zend整体用纯C实现，是PHP的内核部分，它将PHP代码翻译（词法、语法解析等一系列编译过程）为可执行opcode处理，并实现相应的处理方法，实现了基本的数据结构（如hashtable、oo）、内存分配及管理、提供了相应的api方法供外部调用，是一切的核心，所有的外围功能均围绕Zend实现。</li>
+<li><strong>Extensions</strong>：围绕着Zend引擎，extensions通过组件式的方式提供各种基础服务，我们常见的各种内置函数（如array系列）、标准库等都是通过extension来实现，用户也可以根据需要实现自己的extension以达到功能扩展、性能优化等目的（如贴吧正在使用的PHP中间层、富文本解析就是extension的典型应用）。</li>
+<li><strong>Sapi</strong>：Sapi全称是Server Application Programming Interface，也就是服务端应用编程接口，Sapi通过一系列钩子函数，使得PHP可以和外围交互数据，这是PHP非常优雅和成功的一个设计，通过sapi成功的将PHP本身和上层应用解耦隔离，PHP可以不再考虑如何针对不同应用进行兼容，而应用本身也可以针对自己的特点实现不同的处理方式。</li>
+<li><strong>Application</strong>：这就是我们平时编写的PHP程序，通过不同的sapi方式得到各种各样的应用模式，如通过webserver实现web应用、在命令行下以脚本方式运行等等。  如果PHP是一辆车，那么车的框架就是PHP本身，Zend是车的引擎（发动机），Ext下面的各种组件就是车的轮子，Sapi可以看做是公路，车可以跑在不同类型的公路上，而一次PHP程序的执行就是汽车跑在公路上。因此，我们需要：性能优异的引擎+合适的车轮+正确的跑道。</li>
+</ol>
+
+<h2 id="toc_2">3.Sapi</h2>
+
+<p>如前所述，Sapi通过通过一系列的接口，使得外部应用可以和PHP交换数据，并可以根据不同应用特点实现特定的处理方法，我们常见的一些sapi有：</p>
+
+<ol>
+<li><strong>apache2handler</strong>：这是以apache作为webserver，采用mod_PHP模式运行时候的处理方式。</li>
+<li><strong>cgi</strong>：这是webserver和PHP直接的另一种交互方式，也就是大名鼎鼎的fastcgi协议，在最近今年fastcgi+PHP得到越来越多的应用，也是异步webserver所唯一支持的方式。</li>
+<li><strong>cli</strong>：命令行调用的应用模式</li>
+</ol>
+
+<h2 id="toc_3">4.PHP的执行流程&amp;opcode</h2>
+
+<p>我们先来看看PHP代码的执行所经过的流程。</p>
+
+<p>从图上可以看到，PHP实现了一个典型的动态语言执行过程：拿到一段代码后，经过词法解析、语法解析等阶段后，源程序会被翻译成一个个指令(<code>opcodes</code>)，然后ZEND虚拟机顺次执行这些指令完成操作。PHP本身是用C实现的，因此最终调用的也都是C的函数，实际上，我们可以把PHP看做是一个C开发的软件。</p>
+
+<p>PHP的执行的核心是翻译出来的一条一条指令，也即opcode。</p>
+
+<p>Opcode是PHP程序执行的最基本单位。一个opcode由两个参数(op1,op2)、返回值和处理函数组成。PHP程序最终被翻译为一组opcode处理函数的顺序执行。</p>
+
+<p>常见的几个处理函数：</p>
+
+<pre><code class="language-c">ZEND_ASSIGN_SPEC_CV_CV_HANDLER : 变量分配 （$a=$b）
+
+ZEND_DO_FCALL_BY_NAME_SPEC_HANDLER：函数调用
+
+ZEND_CONCAT_SPEC_CV_CV_HANDLER：字符串拼接 $a.$b
+
+ZEND_ADD_SPEC_CV_CONST_HANDLER: 加法运算 $a+2
+
+ZEND_IS_EQUAL_SPEC_CV_CONST：判断相等 $a==1
+
+ZEND_IS_IDENTICAL_SPEC_CV_CONST：判断相等 $a===1
+</code></pre>
+
+<h2 id="toc_4">5.HashTable — 核心数据结构</h2>
+
+<p>HashTable是Zend的核心数据结构，在PHP里面几乎并用来实现所有常见功能，我们知道的PHP数组即是其典型应用，此外，在zend内部，如函数符号表、全局变量等也都是基于hash table来实现。</p>
+
+<p>PHP的hash table具有如下特点：</p>
+
+<ol>
+<li>支持典型的key-&gt;value查询</li>
+<li>可以当做数组使用</li>
+<li>添加、删除节点是 O(1) 复杂度</li>
+<li>key支持混合类型：同时存在关联数组合索引数组</li>
+<li>Value支持混合类型：<code>array (&quot;string&quot;, 2332)</code></li>
+<li>支持线性遍历：如foreach</li>
+</ol>
+
+<p>Zend hash table实现了典型的hash表散列结构，同时通过附加一个双向链表，提供了正向、反向遍历数组的功能。其结构如下图：</p>
+
+<p><img src="media/15707746132238/15707754457694.jpg" alt=""/></p>
+
+<p>可以看到，在hash table中既有key-&gt;value形式的散列结构，也有双向链表模式，使得它能够非常方便的支持快速查找和线性遍历。</p>
+
+<p>散列结构：Zend的散列结构是典型的hash表模型，通过链表的方式来解决冲突。需要注意的是zend的hash table是一个自增长的数据结构，当hash表数目满了之后，其本身会动态以2倍的方式扩容并重新元素位置。初始大小均为8。另外，在进行key-&gt;value快速查找时候，zend本身还做了一些优化，通过空间换时间的方式加快速度。比如在每个元素中都会用一个变量nKeyLength标识key的长度以作快速判定。<br/>
+双向链表：Zend hash table通过一个链表结构，实现了元素的线性遍历。理论上，做遍历使用单向链表就够了，之所以使用双向链表，主要目的是为了快速删除，避免遍历。Zend hash table是一种复合型的结构，作为数组使用时，即支持常见的关联数组也能够作为顺序索引数字来使用，甚至允许2者的混合。<br/>
+PHP关联数组：关联数组是典型的hash_table应用。一次查询过程经过如下几步（从代码可以看出，这是一个常见的hash查询过程，并增加一些快速判定加速查找。）：<br/>
+getKeyHashValue h;<br/>
+index = n &amp; nTableMask;<br/>
+Bucket *p = arBucket[index];<br/>
+while (p) {<br/>
+    if ((p-&gt;h == h) &amp; (p-&gt;nKeyLength == nKeyLength)) {<br/>
+        RETURN p-&gt;data;<br/><br/>
+    }<br/>
+    p=p-&gt;next;<br/>
+}<br/>
+RETURN FALTURE;<br/>
+PHP索引数组：索引数组就是我们常见的数组，通过下标访问。例如 \(arr[0]，Zend HashTable内部进行了归一化处理，对于index类型key同样分配了hash值和nKeyLength(为0)。内部成员变量nNextFreeElement就是当前分配到的最大id，每次push后自动加一。正是这种归一化处理，PHP才能够实现关联和非关联的混合。由于push操作的特殊性，索引key在PHP数组中先后顺序并不是通过下标大小来决定，而是由push的先后决定。例如 \)arr[1] = 2; $arr[2] = 3; 对于double类型的key，Zend HashTable会将他当做索引key处理</p>
+
+<ol>
+<li>PHP变量<br/>
+PHP是一门弱类型语言，本身不严格区分变量的类型。PHP在变量申明的时候不需要指定类型。PHP在程序运行期间可能进行变量类型的隐示转换。和其他强类型语言一样，程序中也可以进行显示的类型转换。PHP变量可以分为简单类型(int、string、bool)、集合类型(array resource object)和常量(const)。以上所有的变量在底层都是同一种结构 zval。</li>
+</ol>
+
+<p>Zval是zend中另一个非常重要的数据结构，用来标识并实现PHP变量，其数据结构如下：</p>
+
+<p>Zval主要由三部分组成：</p>
+
+<p>type：指定了变量所述的类型（整数、字符串、数组等）<br/>
+refcount&amp;is_ref：用来实现引用计数(后面具体介绍)<br/>
+value：核心部分，存储了变量的实际数据<br/>
+Zvalue是用来保存一个变量的实际数据。因为要存储多种类型，所以zvalue是一个union，也由此实现了弱类型。</p>
+
+<p>PHP变量类型和其实际存储对应关系如下：</p>
+
+<p>IS_LONG   -&gt; lvalue<br/>
+IS_DOUBLE -&gt; dvalue<br/>
+IS_ARRAY  -&gt; ht<br/>
+IS_STRING -&gt; str<br/>
+IS_RESOURCE -&gt; lvalue<br/>
+引用计数<br/>
+引用计数在内存回收、字符串操作等地方使用非常广泛。PHP中的变量就是引用计数的典型应用。Zval的引用计数通过成员变量is_ref和ref_count实现，通过引用计数，多个变量可以共享同一份数据。避免频繁拷贝带来的大量消耗。</p>
+
+<p>在进行赋值操作时，zend将变量指向相同的zval同时ref_count++，在unset操作时，对应的ref_count-1。只有ref_count减为0时才会真正执行销毁操作。如果是引用赋值，则zend会修改is_ref为1。</p>
+
+<p>PHP变量通过引用计数实现变量共享数据，那如果改变其中一个变量值呢？当试图写入一个变量时，Zend若发现该变量指向的zval被多个变量共享，则为其复制一份ref_count为1的zval，并递减原zval的refcount，这个过程称为“zval分离”。可见，只有在有写操作发生时zend才进行拷贝操作，因此也叫copy-on-write(写时拷贝)</p>
+
+<p>对于引用型变量，其要求和非引用型相反，引用赋值的变量间必须是捆绑的，修改一个变量就修改了所有捆绑变量。</p>
+
+<p>整数和浮点数<br/>
+整数、浮点数是PHP中的基础类型之一，也是一个简单型变量。对于整数和浮点数，在zvalue中直接存储对应的值。其类型分别是long和double。</p>
+
+<p>从zvalue结构中可以看出，对于整数类型，和c等强类型语言不同，PHP是不区分int、unsigned int、long、long long等类型的，对它来说，整数只有一种类型也就是long。由此，可以看出，在PHP里面，整数的取值范围是由编译器位数来决定而不是固定不变的。</p>
+
+<p>对于浮点数，类似整数，它也不区分float和double而是统一只有double一种类型。</p>
+
+<p>在PHP中，如果整数范围越界了怎么办？这种情况下会自动转换为double类型，这个一定要小心，很多trick都是由此产生。</p>
+
+<p>字符和字符串<br/>
+和整数一样，字符变量也是PHP中的基础类型和简单型变量。通过zvalue结构可以看出，在PHP中，字符串是由由指向实际数据的指针和长度结构体组成，这点和c++中的string比较类似。由于通过一个实际变量表示长度，和c不同，它的字符串可以是2进制数据（包含\0），同时在PHP中，求字符串长度strlen是O(1)操作。</p>
+
+<p>在新增、修改、追加字符串操作时，PHP都会重新分配内存生成新的字符串。最后，出于安全考虑，PHP在生成一个字符串时末尾仍然会添加\0。</p>
+
+<p>常见的字符串拼接方式及速度比较：</p>
+
+<p>假设有如下4个变量：</p>
+
+<p>\(strA = &#39;123&#39;;<br/>
+\)strB = &#39;456&#39;;<br/>
+\(intA = 123;<br/>
+\)intB = 456;<br/>
+现在对如下的几种字符串拼接方式做一个比较和说明：</p>
+
+<p>// 下面两张情况，zend会重新malloc一块内存并进行相应处理，其速度一般<br/>
+\(res = \)strA . \(strB<br/>
+\)res = &quot;\(strA\)strB&quot;</p>
+
+<p>// 这种是速度最快的，zend会在当前strA基础上直接relloc，避免重复拷贝<br/>
+\(strA = \)strA . $strB</p>
+
+<p>// 这种速度较慢，因为需要做隐式的格式转换，实际编写程序中也应该注意尽量避免<br/>
+\(res = \)intA . $intB</p>
+
+<p>// 这会是最慢的一种方式，因为sprintf在PHP中并不是一个语言结构，<br/>
+// 本身对于格式识别和处理就需要耗费比较多时间，另外本身机制也是malloc。<br/>
+// 不过sprintf的方式最具可读性，实际中可以根据具体情况灵活选择。<br/>
+\(strA = sprintf (&quot;%s%s&quot;, \)strA . $strB);<br/>
+数组<br/>
+PHP的数组通过Zend HashTable来天然实现。</p>
+
+<p>foreach操作如何实现？对一个数组的foreach就是通过遍历hashtable中的双向链表完成。对于索引数组，通过foreach遍历效率比for高很多，省去了key-&gt;value的查找。count操作直接调用HashTable-&gt;NumOfElements，O(1)操作。对于 &#39;123&#39; 这样的字符串，zend会转换为其整数形式。\(arr[&#39;123&#39;]和\)arr[123]是等价的。</p>
+
+<p>资源<br/>
+资源类型变量是PHP中最复杂的一种变量，也是一种复合型结构。</p>
+
+<p>PHP的zval可以表示广泛的数据类型，但是对于自定义的数据类型却很难充分描述。由于没有有效的方式描绘这些复合结构，因此也没有办法对它们使用传统的操作符。要解决这个问题，只需要通过一个本质上任意的标识符（label）引用指针，这种方式被称为资源。</p>
+
+<p>在zval中，对于resource，lval作为指针来使用，直接指向资源所在的地址。Resource可以是任意的复合结构，我们熟悉的mysqli、fsock、memcached等都是资源。</p>
+
+<p>如何使用资源：</p>
+
+<p>注册：对于一个自定义的数据类型，要想将它作为资源。首先需要进行注册，zend会为它分配全局唯一标示。<br/>
+获取一个资源变量：对于资源，zend维护了一个id-&gt;实际数据的hash_tale。对于一个resource，在zval中只记录了它的id。fetch的时候通过id在hash_table中找到具体的值返回。<br/>
+资源销毁：资源的数据类型是多种多样的。Zend本身没有办法销毁它。因此需要用户在注册资源的时候提供销毁函数。当unset资源时，zend调用相应的函数完成析构。同时从全局资源表中删除它。<br/>
+资源可以长期驻留，不只是在所有引用它的变量超出作用域之后，甚至是在一个请求结束了并且新的请求产生之后。这些资源称为持久资源，因为它们贯通SAPI的整个生命周期持续存在，除非特意销毁。很多情况下，持久化资源可以在一定程度上提高性能。比如我们常见的mysql_pconnect ,持久化资源通过pemalloc分配内存，这样在请求结束的时候不会释放。 对zend来说，对两者本身并不区分。</p>
+
+<p>变量作用域<br/>
+PHP中的局部变量和全局变量是如何实现的？对于一个请求，任意时刻PHP都可以看到两个符号表(symbol_table和active_symbol_table)，其中前者用来维护全局变量。后者是一个指针，指向当前活动的变量符号表，当程序进入到某个函数中时，zend就会为它分配一个符号表x同时将active_symbol_table指向a。通过这样的方式实现全局、局部变量的区分。</p>
+
+<p>获取变量值：PHP的符号表是通过hash_table实现的，对于每个变量都分配唯一标识，获取的时候根据标识从表中找到相应zval返回。</p>
+
+<p>函数中使用全局变量：在函数中，我们可以通过显式申明global来使用全局变量。在active_symbol_table中创建symbol_table中同名变量的引用，如果symbol_table中没有同名变量则会先创建。</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[如何练好SQL]]></title>
     <link href="blog.lilaiqun.com/15706131641039.html"/>
     <updated>2019-10-09T17:26:04+08:00</updated>
     <id>blog.lilaiqun.com/15706131641039.html</id>
     <content type="html"><![CDATA[
 <blockquote>
-<p>摘自 <a href="https://www.cnblogs.com/xiaoyangjia/p/11267191.html">https://www.cnblogs.com/xiaoyangjia/p/11267191.html</a></p>
+<p>摘自 <a href="#">https://www.cnblogs.com/xiaoyangjia/p/11267191.html</a></p>
 </blockquote>
 
 <p>博主负责的项目主要采用阿里云数据库MySQL，最近频繁出现慢SQL告警，执行时间最长的竟然高达5分钟。导出日志后分析，主要原因竟然是<strong>没有命中索引</strong>和<strong>没有分页处理</strong>。其实这是非常低级的错误，我不禁后背一凉，团队成员的技术水平亟待提高啊。改造这些SQL的过程中，总结了一些经验分享给大家，如果有错误欢迎批评指正。</p>
 
-<h2 id="toc_0">MySQL性能</h2>
+<h2 id="toc_0">1.MySQL性能</h2>
 
-<h3 id="toc_1">1.最大数据量</h3>
+<h3 id="toc_1">1.1.最大数据量</h3>
 
 <p>  抛开数据量和并发数，谈性能都是耍流氓。MySQL没有限制单表最大记录数，它取决于操作系统对文件大小的限制。</p>
 
@@ -68,7 +334,7 @@
 
 <p>《阿里巴巴Java开发手册》提出单表行数超过500万行或者单表容量超过2GB，才推荐分库分表。性能由综合因素决定，抛开业务复杂度，影响程度依次是硬件配置、MySQL配置、数据表设计、索引优化。500万这个值仅供参考，并非铁律。博主曾经操作过超过4亿行数据的单表，分页查询最新的20条记录耗时0.6秒，SQL语句大致是<code>select field_1,field_2 from table where id &lt; #{prePageMinId} order by id desc limit 20，prePageMinId</code> 是上一页数据记录的最小ID。虽然当时查询速度还凑合，随着数据不断增长，有朝一日必定不堪重负。分库分表是个周期长而风险高的大活儿，应该尽可能在当前结构上优化，比如升级硬件、迁移历史数据等等，实在没辙了再分。对分库分表感兴趣的同学可以阅读分库分表的基本思想。</p>
 
-<h3 id="toc_2">2.最大并发数</h3>
+<h3 id="toc_2">1.2.最大并发数</h3>
 
 <p>  并发数是指同一时刻数据库能处理多少个请求，由<code>max_connections</code>和<code>max_user_connections</code>决定。<code>max_connections</code>是指MySQL实例的最大连接数，上限值是16384，<code>max_user_connections</code>是指每个数据库用户的最大连接数。MySQL会为每个连接提供缓冲区，意味着消耗更多的内存。如果连接数设置太高硬件吃不消，太低又不能充分利用硬件。一般要求两者比值超过10%，计算方法如下：<br/>
 <code>max_used_connections / max_connections * 100% = 3/100 *100% ≈ 3%</code></p>
@@ -86,153 +352,279 @@ max_connections = 100
 max_used_connections = 20
 </code></pre>
 
-<p>查询耗时0.5秒<br/>
-  建议将单次查询耗时控制在0.5秒以内，0.5秒是个经验值，源于用户体验的3秒原则。如果用户的操作3秒内没有响应，将会厌烦甚至退出。响应时间=客户端UI渲染耗时+网络请求耗时+应用程序处理耗时+查询数据库耗时，0.5秒就是留给数据库1/6的处理时间。</p>
+<h3 id="toc_3">1.3.查询耗时0.5秒</h3>
 
-<p>实施原则<br/>
-  相比NoSQL数据库，MySQL是个娇气脆弱的家伙。它就像体育课上的女同学，一点纠纷就和同学闹别扭(扩容难)，跑两步就气喘吁吁(容量小并发低)，常常身体不适要请假(SQL约束太多)。如今大家都会搞点分布式，应用程序扩容比数据库要容易得多，所以实施原则是数据库少干活，应用程序多干活。</p>
+<p>  建议将单次查询耗时控制在0.5秒以内，0.5秒是个经验值，源于用户体验的3秒原则。如果用户的操作3秒内没有响应，将会厌烦甚至退出。响应时间=客户端UI渲染耗时+网络请求耗时+应用程序处理耗时+查询数据库耗时，0.5秒就是留给数据库1/6的处理时间。</p>
 
-<p>充分利用但不滥用索引，须知索引也消耗磁盘和CPU。<br/>
-不推荐使用数据库函数格式化数据，交给应用程序处理。<br/>
-不推荐使用外键约束，用应用程序保证数据准确性。<br/>
-写多读少的场景，不推荐使用唯一索引，用应用程序保证唯一性。<br/>
-适当冗余字段，尝试创建中间表，用应用程序计算中间结果，用空间换时间。<br/>
-不允许执行极度耗时的事务，配合应用程序拆分成更小的事务。<br/>
-预估重要数据表（比如订单表）的负载和数据增长态势，提前优化。<br/>
-数据表设计<br/>
-数据类型<br/>
-  数据类型的选择原则：更简单或者占用空间更小。</p>
+<h3 id="toc_4">1.4.实施原则</h3>
 
-<p>如果长度能够满足，整型尽量使用tinyint、smallint、medium_int而非int。<br/>
-如果字符串长度确定，采用char类型。<br/>
-如果varchar能够满足，不采用text类型。<br/>
-精度要求较高的使用decimal类型，也可以使用BIGINT，比如精确两位小数就乘以100后保存。<br/>
-尽量采用timestamp而非datetime。<br/>
-类型  占据字节    描述<br/>
-datetime    8字节 &#39;1000-01-01 00:00:00.000000&#39; to &#39;9999-12-31 23:59:59.999999<br/>
-timestamp   4字节 &#39;1970-01-01 00:00:01.000000&#39; to &#39;2038-01-19 03:14:07.999999&#39;<br/>
-相比datetime，timestamp占用更少的空间，以UTC的格式储存自动转换时区。</p>
+<p>  相比NoSQL数据库，MySQL是个娇气脆弱的家伙。它就像体育课上的女同学，一点纠纷就和同学闹别扭(扩容难)，跑两步就气喘吁吁(容量小并发低)，常常身体不适要请假(SQL约束太多)。如今大家都会搞点分布式，应用程序扩容比数据库要容易得多，所以实施原则是数据库少干活，应用程序多干活。</p>
 
-<p>避免空值<br/>
-  MySQL中字段为NULL时依然占用空间，会使索引、索引统计更加复杂。从NULL值更新到非NULL无法做到原地更新，容易发生索引分裂影响性能。尽可能将NULL值用有意义的值代替，也能避免SQL语句里面包含is not null的判断。</p>
+<ul>
+<li>充分利用但不滥用索引，须知索引也消耗磁盘和CPU。</li>
+<li>不推荐使用数据库函数格式化数据，交给应用程序处理。</li>
+<li>不推荐使用外键约束，用应用程序保证数据准确性。</li>
+<li>写多读少的场景，不推荐使用唯一索引，用应用程序保证唯一性。</li>
+<li>适当冗余字段，尝试创建中间表，用应用程序计算中间结果，用空间换时间。</li>
+<li>不允许执行极度耗时的事务，配合应用程序拆分成更小的事务。</li>
+<li>预估重要数据表（比如订单表）的负载和数据增长态势，提前优化。</li>
+</ul>
 
-<p>text类型优化<br/>
-  由于text字段储存大量数据，表容量会很早涨上去，影响其他字段的查询性能。建议抽取出来放在子表里，用业务主键关联。</p>
+<h2 id="toc_5">2.数据表设计</h2>
 
-<p>索引优化<br/>
-索引分类<br/>
-普通索引：最基本的索引。<br/>
-组合索引：多个字段上建立的索引，能够加速复合查询条件的检索。<br/>
-唯一索引：与普通索引类似，但索引列的值必须唯一，允许有空值。<br/>
-组合唯一索引：列值的组合必须唯一。<br/>
-主键索引：特殊的唯一索引，用于唯一标识数据表中的某一条记录，不允许有空值，一般用primary key约束。<br/>
-全文索引：用于海量文本的查询，MySQL5.6之后的InnoDB和MyISAM均支持全文索引。由于查询精度以及扩展性不佳，更多的企业选择Elasticsearch。<br/>
-索引优化<br/>
-分页查询很重要，如果查询数据量超过30%，MYSQL不会使用索引。<br/>
+<h3 id="toc_6">2.1.数据类型</h3>
+
+<p>  数据类型的选择原则：更简单或者占用空间更小。</p>
+
+<ul>
+<li>如果长度能够满足，整型尽量使用<code>tinyint</code>、<code>smallint</code>、<code>medium_int</code>而非<code>int</code>。</li>
+<li>如果字符串长度确定，采用<code>char</code>类型。</li>
+<li>如果<code>varchar</code>能够满足，不采用<code>text</code>类型。</li>
+<li>精度要求较高的使用<code>decimal</code>类型，也可以使用<code>BIGINT</code>，比如精确两位小数就乘以100后保存。</li>
+<li>尽量采用<code>timestamp</code>而非<code>datetime</code>。</li>
+</ul>
+
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>占据字节</th>
+<th>描述</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>datetime</td>
+<td><strong>8字节</strong></td>
+<td>&#39;1000-01-01 00:00:00.000000&#39; to &#39;9999-12-31 23:59:59.999999</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td><strong>4字节</strong></td>
+<td>&#39;1970-01-01 00:00:01.000000&#39; to &#39;2038-01-19 03:14:07.999999&#39;</td>
+</tr>
+</tbody>
+</table>
+
+<p>相比datetime，timestamp占用更少的空间，以UTC的格式储存自动转换时区。</p>
+
+<h3 id="toc_7">2.2.避免空值</h3>
+
+<p>  MySQL中字段为<code>NULL</code>时依然占用空间，会使索引、索引统计更加复杂。从<code>NULL</code>值更新到非NULL无法做到原地更新，容易发生索引分裂影响性能。尽可能将NULL值用有意义的值代替，也能避免SQL语句里面包含<code>is not null</code>的判断。</p>
+
+<h3 id="toc_8">2.3.text类型优化</h3>
+
+<p>  由于text字段储存大量数据，表容量会很早涨上去，影响其他字段的查询性能。建议抽取出来放在子表里，用业务主键关联。</p>
+
+<h2 id="toc_9">3.索引优化</h2>
+
+<h3 id="toc_10">3.1.索引分类</h3>
+
+<ol>
+<li><strong>普通索引</strong>：最基本的索引。</li>
+<li><strong>组合索引</strong>：多个字段上建立的索引，能够加速复合查询条件的检索。</li>
+<li><strong>唯一索引</strong>：与普通索引类似，但索引列的值必须唯一，允许有空值。</li>
+<li><strong>组合唯一索引</strong>：列值的组合必须唯一。</li>
+<li><strong>主键索引</strong>：特殊的唯一索引，用于唯一标识数据表中的某一条记录，不允许有空值，一般用primary key约束。</li>
+<li><strong>全文索引</strong>：用于海量文本的查询，MySQL5.6之后的InnoDB和MyISAM均支持全文索引。由于查询精度以及扩展性不佳，更多的企业选择Elasticsearch。</li>
+</ol>
+
+<h3 id="toc_11">3.2.索引优化</h3>
+
+<p>分页查询很重要，如果查询数据量超过30%，MYSQL不会使用索引。<br/>
 单表索引数不超过5个、单个索引字段数不超过5个。<br/>
 字符串可使用前缀索引，前缀长度控制在5-8个字符。<br/>
 字段唯一性太低，增加索引没有意义，如：是否删除、性别。<br/>
 合理使用覆盖索引，如下所示：<br/>
-select login_name, nick_name from member where login_name = ?<br/>
-login_name, nick_name两个字段建立组合索引，比login_name简单索引要更快</p>
+<code>select login_name, nick_name from member where login_name = ?</code><br/>
+<code>login_name, nick_name</code>两个字段建立组合索引，比<code>login_name</code>简单索引要更快</p>
 
-<p>SQL优化<br/>
-分批处理<br/>
-  博主小时候看到鱼塘挖开小口子放水，水面有各种漂浮物。浮萍和树叶总能顺利通过出水口，而树枝会挡住其他物体通过，有时还会卡住，需要人工清理。MySQL就是鱼塘，最大并发数和网络带宽就是出水口，用户SQL就是漂浮物。不带分页参数的查询或者影响大量数据的update和delete操作，都是树枝，我们要把它打散分批处理，举例说明：<br/>
+<h2 id="toc_12">4.SQL优化</h2>
+
+<h3 id="toc_13">4.1.分批处理</h3>
+
+<p>  博主小时候看到鱼塘挖开小口子放水，水面有各种漂浮物。浮萍和树叶总能顺利通过出水口，而树枝会挡住其他物体通过，有时还会卡住，需要人工清理。MySQL就是鱼塘，最大并发数和网络带宽就是出水口，用户SQL就是漂浮物。不带分页参数的查询或者影响大量数据的update和delete操作，都是树枝，我们要把它打散分批处理，举例说明：<br/>
 业务描述：更新用户所有已过期的优惠券为不可用状态。<br/>
-SQL语句：update status=0 FROM <code>coupon</code> WHERE expire_date &lt;= #{currentDate} and status=1;<br/>
-如果大量优惠券需要更新为不可用状态，执行这条SQL可能会堵死其他SQL，分批处理伪代码如下：</p>
+SQL语句：</p>
 
-<p>int pageNo = 1;<br/>
-int PAGE_SIZE = 100;<br/>
-while(true) {<br/>
-    List<Integer> batchIdList = queryList(&#39;select id FROM <code>coupon</code> WHERE expire_date &lt;= #{currentDate} and status = 1 limit #{(pageNo-1) * PAGE_SIZE},#{PAGE_SIZE}&#39;);<br/>
-    if (CollectionUtils.isEmpty(batchIdList)) {<br/>
-        return;<br/>
-    }<br/>
-    update(&#39;update status = 0 FROM <code>coupon</code> where status = 1 and id in #{batchIdList}&#39;)<br/>
-    pageNo ++;<br/>
-}<br/>
-操作符&lt;&gt;优化<br/>
-  通常&lt;&gt;操作符无法使用索引，举例如下，查询金额不为100元的订单：<br/>
-select id from orders where amount != 100;<br/>
-如果金额为100的订单极少，这种数据分布严重不均的情况下，有可能使用索引。鉴于这种不确定性，采用union聚合搜索结果，改写方法如下：</p>
+<pre><code class="language-sql">UPDATE status=0 FROM `coupon` WHERE expire_date &lt;= #{currentDate} and status=1;
+</code></pre>
 
-<p>(select id from orders where amount &gt; 100)<br/>
- union all<br/>
-(select id from orders where amount &lt; 100 and amount &gt; 0)<br/>
-OR优化<br/>
-  在Innodb引擎下or无法使用组合索引，比如：</p>
+<p>如果大量优惠券需要更新为不可用状态，执行这条SQL可能会堵死其他SQL，分批处理伪代码如下：</p>
 
-<p>select id，product_name from orders where mobile_no = &#39;13421800407&#39; or user_id = 100;<br/>
-OR无法命中mobile_no + user_id的组合索引，可采用union，如下所示：</p>
+<pre><code class="language-sql">int pageNo = 1;
+int PAGE_SIZE = 100;
+while(true) {
+    List&lt;Integer&gt; batchIdList = queryList(&#39;select id FROM `coupon` WHERE expire_date &lt;= #{currentDate} and status = 1 limit #{(pageNo-1) * PAGE_SIZE},#{PAGE_SIZE}&#39;);
+    if (CollectionUtils.isEmpty(batchIdList)) {
+        return;
+    }
+    update(&#39;update status = 0 FROM `coupon` WHERE status = 1 and id in #{batchIdList}&#39;)
+    pageNo ++;
+}
+</code></pre>
 
-<p>(select id，product_name from orders where mobile_no = &#39;13421800407&#39;)<br/>
- union<br/>
-(select id，product_name from orders where user_id = 100);<br/>
-此时id和product_name字段都有索引，查询才最高效。</p>
+<h3 id="toc_14">4.2.操作符&lt;&gt;优化</h3>
 
-<p>IN优化<br/>
-IN适合主表大子表小，EXIST适合主表小子表大。由于查询优化器的不断升级，很多场景这两者性能差不多一样了。<br/>
-尝试改为join查询，举例如下：<br/>
-select id from orders where user_id in (select id from user where level = &#39;VIP&#39;);<br/>
-采用JOIN如下所示：</p>
+<p>  通常&lt;&gt;操作符无法使用索引，举例如下，查询金额不为100元的订单：</p>
 
-<p>select o.id from orders o left join user u on o.user_id = u.id where u.level = &#39;VIP&#39;;<br/>
-不做列运算<br/>
-  通常在查询条件列运算会导致索引失效，如下所示：<br/>
+<pre><code class="language-sql">SELECT id FROM orders WHERE amount != 100;
+</code></pre>
+
+<p>如果金额为100的订单极少，这种数据分布严重不均的情况下，有可能使用索引。鉴于这种不确定性，采用union聚合搜索结果，改写方法如下：</p>
+
+<pre><code class="language-sql">(SELECT id FROM orders WHERE amount &gt; 100)
+ union all
+(SELECT id FROM orders WHERE amount &lt; 100 and amount &gt; 0)
+</code></pre>
+
+<h3 id="toc_15">4.3.OR优化</h3>
+
+<p>  在Innodb引擎下or无法使用组合索引，比如：</p>
+
+<pre><code class="language-sql">SELECT id，product_name FROM orders WHERE mobile_no = &#39;13421800407&#39; or user_id = 100;
+</code></pre>
+
+<p>OR无法命中mobile_no + user_id的组合索引，可采用union，如下所示：</p>
+
+<pre><code class="language-sql">(SELECT id，product_name FROM orders WHERE mobile_no = &#39;13421800407&#39;)
+ union
+(SELECT id，product_name FROM orders WHERE user_id = 100);
+</code></pre>
+
+<p>此时id和product_name字段都有索引，查询才最高效。</p>
+
+<h3 id="toc_16">4.4.IN优化</h3>
+
+<p>IN适合主表大子表小，EXIST适合主表小子表大。由于查询优化器的不断升级，很多场景这两者性能差不多一样了。<br/>
+尝试改为join查询，举例如下：</p>
+
+<pre><code class="language-sql">SELECT id FROM orders WHERE user_id IN (SELECT id FROM user WHERE level = &#39;VIP&#39;);
+</code></pre>
+
+<p>采用JOIN如下所示：</p>
+
+<pre><code class="language-sql">SELECT o.id FROM orders o LEFT JOIN user u ON o.user_id = u.id WHERE u.level = &#39;VIP&#39;;
+</code></pre>
+
+<h3 id="toc_17">4.5.不做列运算</h3>
+
+<p>  通常在查询条件列运算会导致索引失效，如下所示：<br/>
 查询当日订单</p>
 
-<p>select id from order where date_format(create_time，&#39;%Y-%m-%d&#39;) = &#39;2019-07-01&#39;;<br/>
-date_format函数会导致这个查询无法使用索引，改写后：</p>
+<pre><code class="language-sql">SELECT id FROM order WHERE date_format(create_time，&#39;%Y-%m-%d&#39;) = &#39;2019-07-01&#39;;
+</code></pre>
 
-<p>select id from order where create_time between &#39;2019-07-01 00:00:00&#39; and &#39;2019-07-01 23:59:59&#39;;<br/>
-避免Select all<br/>
-  如果不查询表中所有的列，避免使用SELECT *，它会进行全表扫描，不能有效利用索引。</p>
+<p>date_format函数会导致这个查询无法使用索引，改写后：</p>
 
-<p>Like优化<br/>
-  like用于模糊查询，举个例子（field已建立索引）：</p>
+<pre><code class="language-sql">SELECT id FROM order WHERE create_time BETWEEN &#39;2019-07-01 00:00:00&#39; AND &#39;2019-07-01 23:59:59&#39;;
+</code></pre>
 
-<p>SELECT column FROM table WHERE field like &#39;%keyword%&#39;;<br/>
-这个查询未命中索引，换成下面的写法：</p>
+<h3 id="toc_18">4.6.避免Select all</h3>
 
-<p>SELECT column FROM table WHERE field like &#39;keyword%&#39;;<br/>
-去除了前面的%查询将会命中索引，但是产品经理一定要前后模糊匹配呢？全文索引fulltext可以尝试一下，但Elasticsearch才是终极武器。</p>
+<p>  如果不查询表中所有的列，避免使用SELECT *，它会进行全表扫描，不能有效利用索引。</p>
 
-<p>Join优化<br/>
-  join的实现是采用Nested Loop Join算法，就是通过驱动表的结果集作为基础数据，通过该结数据作为过滤条件到下一个表中循环查询数据，然后合并结果。如果有多个join，则将前面的结果集作为循环数据，再次到后一个表中查询数据。</p>
+<h3 id="toc_19">4.7.Like优化</h3>
+
+<p>  like用于模糊查询，举个例子（field已建立索引）：</p>
+
+<pre><code class="language-sql">SELECT column FROM table WHERE field like &#39;%keyword%&#39;;
+</code></pre>
+
+<p>这个查询未命中索引，换成下面的写法：</p>
+
+<pre><code class="language-sql">SELECT column FROM table WHERE field like &#39;keyword%&#39;;
+</code></pre>
+
+<p>去除了前面的%查询将会命中索引，但是产品经理一定要前后模糊匹配呢？全文索引fulltext可以尝试一下，但Elasticsearch才是终极武器。</p>
+
+<h3 id="toc_20">4.8.Join优化</h3>
+
+<p>  join的实现是采用Nested Loop Join算法，就是通过驱动表的结果集作为基础数据，通过该结数据作为过滤条件到下一个表中循环查询数据，然后合并结果。如果有多个join，则将前面的结果集作为循环数据，再次到后一个表中查询数据。</p>
 
 <p>驱动表和被驱动表尽可能增加查询条件，满足ON的条件而少用Where，用小结果集驱动大结果集。<br/>
 被驱动表的join字段上加上索引，无法建立索引的时候，设置足够的Join Buffer Size。<br/>
-禁止join连接三个以上的表，尝试增加冗余字段。<br/>
-Limit优化<br/>
-  limit用于分页查询时越往后翻性能越差，解决的原则：缩小扫描范围，如下所示：</p>
+禁止join连接三个以上的表，尝试增加冗余字段。</p>
 
-<p>select * from orders order by id desc limit 100000,10 <br/>
-耗时0.4秒<br/>
-select * from orders order by id desc limit 1000000,10<br/>
-耗时5.2秒<br/>
+<h3 id="toc_21">4.9.Limit优化</h3>
+
+<p>  limit用于分页查询时越往后翻性能越差，解决的原则：缩小扫描范围，如下所示：</p>
+
+<pre><code class="language-sql">SELECT * FROM orders ORDER BY id DESC LIMIT 100000,10 
+</code></pre>
+
+<p>耗时0.4秒</p>
+
+<pre><code class="language-sql">SELECT * FROM orders ORDER BY id DESC LIMIT 1000000,10
+</code></pre>
+
+<p>耗时5.2秒<br/>
 先筛选出ID缩小查询范围，写法如下：</p>
 
-<p>select * from orders where id &gt; (select id from orders order by id desc  limit 1000000, 1) order by id desc limit 0,10<br/>
-耗时0.5秒<br/>
+<pre><code class="language-sql">SELECT * FROM orders WHERE id &gt; (SELECT id FROM orders ORDER BY id DESC LIMIT 1000000, 1) ORDER BY id DESC LIMIT 0,10
+</code></pre>
+
+<p>耗时0.5秒<br/>
 如果查询条件仅有主键ID，写法如下：</p>
 
-<p>select id from orders where id between 1000000 and 1000010 order by id desc<br/>
-耗时0.3秒<br/>
+<pre><code class="language-sql">SELECT id FROM orders WHERE id BETWEEN 1000000 AND 1000010 ORDER BY id DESC
+</code></pre>
+
+<p>耗时0.3秒<br/>
 如果以上方案依然很慢呢？只好用游标了，感兴趣的朋友阅读JDBC使用游标实现分页查询的方法</p>
 
-<p>其他数据库<br/>
-  作为一名后端开发人员，务必精通作为存储核心的MySQL或SQL Server，也要积极关注NoSQL数据库，他们已经足够成熟并被广泛采用，能解决特定场景下的性能瓶颈。</p>
+<h2 id="toc_22">5.其他数据库</h2>
 
-<p>分类  数据库 特性<br/>
-键值型 Memcache    用于内容缓存，大量数据的高访问负载<br/>
-键值型 Redis   用于内容缓存，比Memcache支持更多的数据类型，并能持久化数据<br/>
-列式存储    HBase   Hadoop体系的核心数据库，海量结构化数据存储，大数据必备。<br/>
-文档型 MongoDb 知名文档型数据库，也可以用于缓存<br/>
-文档型 CouchDB Apache的开源项目，专注于易用性，支持REST API<br/>
-文档型 SequoiaDB   国内知名文档型数据库<br/>
-图形  Neo4J   用于社交网络构建关系图谱，推荐系统等</p>
+<p>  作为一名后端开发人员，务必精通作为存储核心的MySQL或SQL Server，也要积极关注NoSQL数据库，他们已经足够成熟并被广泛采用，能解决特定场景下的性能瓶颈。</p>
+
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th>数据库</th>
+<th>特性</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>键值型</td>
+<td>Memcache</td>
+<td>用于内容缓存，大量数据的高访问负载</td>
+</tr>
+<tr>
+<td>键值型</td>
+<td>Redis</td>
+<td>用于内容缓存，比Memcache支持更多的数据类型，并能持久化数据</td>
+</tr>
+<tr>
+<td>列式存储</td>
+<td>HBase</td>
+<td>Hadoop体系的核心数据库，海量结构化数据存储，大数据必备。</td>
+</tr>
+<tr>
+<td>文档型</td>
+<td>MongoDb</td>
+<td>知名文档型数据库，也可以用于缓存</td>
+</tr>
+<tr>
+<td>文档型</td>
+<td>CouchDB</td>
+<td>Apache的开源项目，专注于易用性，支持REST API</td>
+</tr>
+<tr>
+<td>文档型</td>
+<td>SequoiaDB</td>
+<td>国内知名文档型数据库</td>
+</tr>
+<tr>
+<td>图形</td>
+<td>Neo4J</td>
+<td>图形    Neo4J   用于社交网络构建关系图谱，推荐系统等</td>
+</tr>
+</tbody>
+</table>
 
 ]]></content>
   </entry>
@@ -244,7 +636,7 @@ select * from orders order by id desc limit 1000000,10<br/>
     <id>blog.lilaiqun.com/15706006250325.html</id>
     <content type="html"><![CDATA[
 <blockquote>
-<p>转自： <a href="https://www.zendstudio.net/archives/php-in_array-s-low-performance/">https://www.zendstudio.net/archives/php-in_array-s-low-performance/</a></p>
+<p>转自： <a href="#">https://www.zendstudio.net/archives/php-in_array-s-low-performance/</a></p>
 </blockquote>
 
 <pre><code class="language-php">&lt;?php
@@ -1184,245 +1576,6 @@ Zend虚拟机</p>
 
 <p><a href="#">各类基础语法的实现</a><br/>
 <a href="#">手把手编写一个PHP扩展</a></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[面试官：给我讲一下分库分表方案]]></title>
-    <link href="blog.lilaiqun.com/15647135075311.html"/>
-    <updated>2019-08-02T10:38:27+08:00</updated>
-    <id>blog.lilaiqun.com/15647135075311.html</id>
-    <content type="html"><![CDATA[
-<span id="more"></span><!-- more -->
-
-<blockquote>
-<p>作者：尜尜人物<br/>
-  链接：<a href="https://www.cnblogs.com/littlecharacter/p/9342129.html">https://www.cnblogs.com/littlecharacter/p/9342129.html</a></p>
-</blockquote>
-
-<ul>
-<li>
-<a href="#toc_0">一、数据库瓶颈</a>
-<ul>
-<li>
-<a href="#toc_1">1、IO瓶颈</a>
-</li>
-<li>
-<a href="#toc_2">2、CPU瓶颈</a>
-</li>
-</ul>
-</li>
-<li>
-<a href="#toc_3">二、分库分表</a>
-<ul>
-<li>
-<a href="#toc_4">1、水平分库</a>
-</li>
-<li>
-<a href="#toc_5">2、水平分表</a>
-</li>
-<li>
-<a href="#toc_6">3、垂直分库</a>
-</li>
-<li>
-<a href="#toc_7">4、垂直分表</a>
-</li>
-</ul>
-</li>
-<li>
-<a href="#toc_8">三、分库分表工具</a>
-</li>
-<li>
-<a href="#toc_9">四、分库分表步骤</a>
-</li>
-<li>
-<a href="#toc_10">五、分库分表问题</a>
-<ul>
-<li>
-<a href="#toc_11">1. 非partition key的查询问题（水平分库分表，拆分策略为常用的hash法）</a>
-</li>
-<li>
-<a href="#toc_12">2、非partition key跨库跨表分页查询问题（水平分库分表，拆分策略为常用的hash法）</a>
-</li>
-<li>
-<a href="#toc_13">3、扩容问题（水平分库分表，拆分策略为常用的hash法）</a>
-</li>
-</ul>
-</li>
-<li>
-<a href="#toc_14">六、分库分表总结</a>
-</li>
-<li>
-<a href="#toc_15">七、分库分表示例</a>
-</li>
-</ul>
-
-
-<h2 id="toc_0">一、数据库瓶颈</h2>
-
-<p>不管是IO瓶颈，还是CPU瓶颈，最终都会导致数据库的活跃连接数增加，进而逼近甚至达到数据库可承载活跃连接数的阈值。在业务Service来看就是，可用数据库连接少甚至无连接可用。接下来就可以想象了吧（并发量、吞吐量、崩溃）。</p>
-
-<h3 id="toc_1">1、IO瓶颈</h3>
-
-<p>第一种：磁盘读IO瓶颈，热点数据太多，数据库缓存放不下，每次查询时会产生大量的IO，降低查询速度 -&gt; 分库和垂直分表。<br/>
-第二种：网络IO瓶颈，请求的数据太多，网络带宽不够 -&gt; 分库。</p>
-
-<h3 id="toc_2">2、CPU瓶颈</h3>
-
-<p>第一种：SQL问题，如SQL中包含join，group by，order by，非索引字段条件查询等，增加CPU运算的操作 -&gt; SQL优化，建立合适的索引，在业务Service层进行业务计算。<br/>
-第二种：单表数据量太大，查询时扫描的行太多，SQL效率低，CPU率先出现瓶颈 -&gt; 水平分表。</p>
-
-<h2 id="toc_3">二、分库分表</h2>
-
-<h3 id="toc_4">1、水平分库</h3>
-
-<p><img src="http://images.lilaiqun.com/15647137481060.jpg" alt=""/></p>
-
-<ol>
-<li><p>概念：以字段为依据，按照一定策略（hash、range等），将一个库中的数据拆分到多个库中。</p></li>
-<li><p>结果：</p></li>
-<li><p>每个库的结构都一样；</p></li>
-<li><p>每个库的数据都不一样，没有交集；</p></li>
-<li><p>所有库的并集是全量数据；</p></li>
-<li><p>场景：系统绝对并发量上来了，分表难以根本上解决问题，并且还没有明显的业务归属来垂直分库。</p></li>
-<li><p>分析：库多了，io和cpu的压力自然可以成倍缓解。</p></li>
-</ol>
-
-<h3 id="toc_5">2、水平分表</h3>
-
-<p><img src="http://images.lilaiqun.com/15647137986218.jpg" alt=""/></p>
-
-<ol>
-<li><p>概念：以字段为依据，按照一定策略（hash、range等），将一个表中的数据拆分到多个表中。</p></li>
-<li><p>结果：<br/>
-每个表的结构都一样；<br/>
-每个表的数据都不一样，没有交集；<br/>
-所有表的并集是全量数据；</p></li>
-<li><p>场景：系统绝对并发量并没有上来，只是单表的数据量太多，影响了SQL效率，加重了CPU负担，以至于成为瓶颈。</p></li>
-<li><p>分析：表的数据量少了，单次SQL执行效率高，自然减轻了CPU的负担。</p></li>
-</ol>
-
-<h3 id="toc_6">3、垂直分库</h3>
-
-<p><img src="http://images.lilaiqun.com/15647138213351.jpg" alt=""/></p>
-
-<ol>
-<li>概念：以表为依据，按照业务归属不同，将不同的表拆分到不同的库中。</li>
-<li>结果：</li>
-<li>每个库的结构都不一样；</li>
-<li>每个库的数据也不一样，没有交集；</li>
-<li><p>所有库的并集是全量数据；</p></li>
-<li><p>场景：系统绝对并发量上来了，并且可以抽象出单独的业务模块。</p></li>
-<li><p>分析：到这一步，基本上就可以服务化了。例如，随着业务的发展一些公用的配置表、字典表等越来越多，这时可以将这些表拆到单独的库中，甚至可以服务化。再有，随着业务的发展孵化出了一套业务模式，这时可以将相关的表拆到单独的库中，甚至可以服务化。</p></li>
-</ol>
-
-<h3 id="toc_7">4、垂直分表</h3>
-
-<p><img src="http://images.lilaiqun.com/15647138576584.jpg" alt=""/></p>
-
-<ol>
-<li><p>概念：以字段为依据，按照字段的活跃性，将表中字段拆到不同的表（主表和扩展表）中。</p></li>
-<li><p>结果：</p></li>
-<li><p>每个表的结构都不一样；</p></li>
-<li><p>每个表的数据也不一样，一般来说，每个表的字段至少有一列交集，一般是主键，用于关联数据；</p></li>
-<li><p>所有表的并集是全量数据；</p></li>
-<li><p>场景：系统绝对并发量并没有上来，表的记录并不多，但是字段多，并且热点数据和非热点数据在一起，单行数据所需的存储空间较大。以至于数据库缓存的数据行减少，查询时会去读磁盘数据产生大量的随机读IO，产生IO瓶颈。</p></li>
-<li><p>分析：可以用列表页和详情页来帮助理解。垂直分表的拆分原则是将热点数据（可能会冗余经常一起查询的数据）放在一起作为主表，非热点数据放在一起作为扩展表。这样更多的热点数据就能被缓存下来，进而减少了随机读IO。拆了之后，要想获得全部数据就需要关联两个表来取数据。但记住，千万别用join，因为join不仅会增加CPU负担并且会讲两个表耦合在一起（必须在一个数据库实例上）。关联数据，应该在业务Service层做文章，分别获取主表和扩展表数据然后用关联字段关联得到全部数据。</p></li>
-</ol>
-
-<h2 id="toc_8">三、分库分表工具</h2>
-
-<ol>
-<li>sharding-sphere：jar，前身是sharding-jdbc；</li>
-<li>TDDL：jar，Taobao Distribute Data Layer；</li>
-<li>Mycat：中间件。</li>
-</ol>
-
-<p>注：工具的利弊，请自行调研，官网和社区优先。</p>
-
-<h2 id="toc_9">四、分库分表步骤</h2>
-
-<p>根据容量（当前容量和增长量）评估分库或分表个数 -&gt; 选key（均匀）-&gt; 分表规则（hash或range等）-&gt; 执行（一般双写）-&gt; 扩容问题（尽量减少数据的移动）。</p>
-
-<h2 id="toc_10">五、分库分表问题</h2>
-
-<h3 id="toc_11">1. 非partition key的查询问题（水平分库分表，拆分策略为常用的hash法）</h3>
-
-<p>除了partition key只有一个非partition key作为条件查询</p>
-
-<p><strong>映射法</strong><br/>
-<img src="http://images.lilaiqun.com/15647140231654.jpg" alt=""/></p>
-
-<p><strong>基因法</strong><br/>
-<img src="http://images.lilaiqun.com/15647140318991.jpg" alt=""/></p>
-
-<p>注：写入时，基因法生成user_id，如图。关于xbit基因，例如要分8张表，23=8，故x取3，即3bit基因。根据user_id查询时可直接取模路由到对应的分库或分表。根据user_name查询时，先通过user_name_code生成函数生成user_name_code再对其取模路由到对应的分库或分表。id生成常用<strong>snowflake算法</strong>。</p>
-
-<ol>
-<li>端上除了partition key不止一个非partition key作为条件查询</li>
-</ol>
-
-<p><strong>映射法</strong><br/>
-<img src="http://images.lilaiqun.com/15647140607030.jpg" alt=""/></p>
-
-<p><strong>冗余法</strong><br/>
-<img src="http://images.lilaiqun.com/15647140694844.jpg" alt=""/></p>
-
-<p>注：按照order_id或buyer_id查询时路由到db_o_buyer库中，按照seller_id查询时路由到db_o_seller库中。感觉有点本末倒置！有其他好的办法吗？改变技术栈呢？</p>
-
-<p>3、后台除了partition key还有各种非partition key组合条件查询</p>
-
-<p><strong>NoSQL法</strong><br/>
-<img src="http://images.lilaiqun.com/15647150946637.jpg" alt=""/></p>
-
-<p><strong>冗余法</strong><br/>
-<img src="http://images.lilaiqun.com/15647151004264.jpg" alt=""/></p>
-
-<h3 id="toc_12">2、非partition key跨库跨表分页查询问题（水平分库分表，拆分策略为常用的hash法）</h3>
-
-<p>注：用NoSQL法解决（ES等）。</p>
-
-<h3 id="toc_13">3、扩容问题（水平分库分表，拆分策略为常用的hash法）</h3>
-
-<p>1、水平扩容库（升级从库法<br/>
-<img src="http://images.lilaiqun.com/15647151413436.jpg" alt=""/></p>
-
-<p>注：扩容是成倍的。</p>
-
-<p>2、水平扩容表（双写迁移法）<br/>
-<img src="http://images.lilaiqun.com/15647151512396.jpg" alt=""/></p>
-
-<p>第一步：（同步双写）应用配置双写，部署；<br/>
-第二步：（同步双写）将老库中的老数据复制到新库中；<br/>
-第三步：（同步双写）以老库为准校对新库中的老数据；<br/>
-第四步：（同步双写）应用去掉双写，部署；</p>
-
-<p>注：双写是通用方案。</p>
-
-<h2 id="toc_14">六、分库分表总结</h2>
-
-<p>分库分表，首先得知道瓶颈在哪里，然后才能合理地拆分（分库还是分表？水平还是垂直？分几个？）。且不可为了分库分表而拆分。</p>
-
-<p>1、选key很重要，既要考虑到拆分均匀，也要考虑到非partition key的查询。<br/>
-2、只要能满足需求，拆分规则越简单越好。</p>
-
-<h2 id="toc_15">七、分库分表示例</h2>
-
-<p>示例GitHub地址：<a href="https://github.com/littlecharacter4s/study-sharding">https://github.com/littlecharacter4s/study-sharding</a></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Excel制作二维码]]></title>
-    <link href="blog.lilaiqun.com/15644556452076.html"/>
-    <updated>2019-07-30T11:00:45+08:00</updated>
-    <id>blog.lilaiqun.com/15644556452076.html</id>
-    <content type="html"><![CDATA[
-<span id="more"></span><!-- more -->
-
-<p><img src="http://images.lilaiqun.com/Excel%E5%88%B6%E4%BD%9C%E4%BA%8C%E7%BB%B4%E7%A0%81.png" alt="Excel制作二维码"/></p>
 
 ]]></content>
   </entry>

@@ -2,7 +2,17 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
   <loc>blog.lilaiqun.com/</loc>
-  <lastmod>2019-10-09T21:20:10+08:00</lastmod>
+  <lastmod>2019-10-12T11:43:05+08:00</lastmod>
+</url>
+
+<url>
+  <loc>blog.lilaiqun.com/15708513672196.html</loc>
+  <lastmod>2019-10-12T11:36:07+08:00</lastmod>
+</url>
+
+<url>
+  <loc>blog.lilaiqun.com/15707746132238.html</loc>
+  <lastmod>2019-10-11T14:16:53+08:00</lastmod>
 </url>
 
 <url>
@@ -184,6 +194,10 @@
 
 <url>
   <loc>blog.lilaiqun.com/%E9%AB%98%E5%B9%B6%E5%8F%91.html</loc>
+</url>
+
+<url>
+  <loc>blog.lilaiqun.com/Linux.html</loc>
 </url>
 
 

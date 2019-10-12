@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
     
-  消息队列 - lilaiqun
+  awk统计访问日志access.log - lilaiqun
   
   </title>
-  
+  <meta name="keywords" content="Linux awk shell" />
   
   <link href="atom.xml" rel="alternate" title="lilaiqun" type="application/atom+xml">
   <link href="https://cdn.bootcss.com/foundation/5.5.2/css/foundation.min.css" rel="stylesheet">
@@ -125,210 +125,117 @@
        
 
  <script type="text/javascript">
-	$(function(){
-		$('#menu_item_index').addClass('is_active');
-	});
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
 </script>
 <div class="row">
-	<div class="large-8 medium-8 columns">
-		<div class="markdown-body home-categories">
-		
-			<div class="article">
-                <a class="clearlink" href="15700882317067.html">
-                
-                  <h1>如何保证消息的顺序性？</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<blockquote>
-<p>提问：如何保证消息的顺序性</p>
-</blockquote>
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>awk统计访问日志access.log</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2019/10/12</span>
 
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='Linux.html'>Linux</a></span>
+           
+         
+          <span class="comments">
+            
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700882317067.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/3</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+            
+          </span>
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15700740718336.html">
-                
-                  <h1>如何保证消息队列的可靠性（消息不丢）</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<blockquote>
-<p>提问： 如何保证消息的可靠性传输（如何处理消息丢失的问题）？</p>
-</blockquote>
+        </div>
+      </div><!-- article -->
 
+      <div class="article-content">
+      <h2 id="toc_0">awk如何使用</h2>
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700740718336.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/3</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+<p>简单文本处理中，功能强大的awk命令。下文详细描述使用方法与示例:</p>
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15700210659906.html">
-                
-                  <h1>如何保证消息不被重复消费（消费时的幂等性）</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700210659906.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/2</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+<p>语法：</p>
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15700185588826.html">
-                
-                  <h1>如何保证消息队列的高可用啊？</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<p>问题：</p>
+<pre><code class="language-bash">awk [选项参数] &#39;script&#39; var=value file(s)
+或
+awk [选项参数] -f scriptfile var=value file(s)
+</code></pre>
 
-<pre><code class="language-text">MQ的缺点：系统可用性降低。接下来围绕MQ的缺点怎么解决。
+<h2 id="toc_1">查看最新的访问日志</h2>
 
-MQ的高可用性怎么保证？ 
+<pre><code class="language-bash">$ tail -n 50000 /data1/logs/nginx/access.log
+
+0.012   0.012   10.135.12.135   508 127.0.0.1:9001  12/Oct/2019:10:49:17 +0800 aaadns.com   POST /api/pro HTTP/1.0
+</code></pre>
+
+<p><code>tail</code>查看文件结尾<br/>
+<code>tail -n 50000</code> 查看文件倒数5万条记录</p>
+
+<h2 id="toc_2">正则匹配访问url 包含字符串</h2>
+
+<pre><code class="language-bash">$ awk &#39;{if($10~/separation/) {print substr($10,0,80)}}&#39;
+</code></pre>
+
+<p><code>$0</code> 表示整行记录<br/>
+<code>$10</code>  /api/pro 以空格分隔的第10个字符串<br/>
+<code>if ($10~/separation/)</code>  正则匹配第10个字符串是否包含separation<br/>
+<code>substr($10, 0, 80)</code> 取第10个字符串中0到80个字符</p>
+
+<h2 id="toc_3">url以特定字符分隔</h2>
+
+<pre><code class="language-text">$ awk &#39;{split($0,a,&quot;?&quot;); print a[1]}
+</code></pre>
+
+<p><code>split($0,a,&quot;?&quot;)</code> $0表示输入的字符串，将输入字符串以?分隔，结果保存在a变量中</p>
+
+<h2 id="toc_4">统计所有url的访问次数</h2>
+
+<pre><code class="language-text">tail -n 50000 /data1/logs/nginx/access.log | awk &#39;{if($10~/separation/) {print $10}}&#39; | awk &#39;{split($0,a,&quot;?&quot;); print a[1]}&#39; |sort |uniq -c
+
+   13 /separation/business/getBusin****
+   94 /separation/house/com**
+   13 /separation/house/de**
+   4 /separation/housedetail/click***
 </code></pre>
 
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700185588826.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/2</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
+    
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-			<div class="article">
-                <a class="clearlink" href="15700030762829.html">
-                
-                  <h1>消息队列技术选型</h1>
-                  <div class="a-content">
-                      
-                      <div class="a-content-text">
-                        
-                        	<h2 id="toc_0">1.为何使用消息队列</h2>
+      </div>
 
-<p><code>解耦、异步、消峰</code></p>
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="15707746132238.html" 
+          title="Next Post: PHP底层的运行机制与原理">PHP底层的运行机制与原理 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
 
 
-                        
-                      </div>
-                  </div>
-                </a>
-                <div class="read-more clearfix">
-                  <div class="more-left left">
-                   <a href="15700030762829.html">Read more</a>&nbsp;&nbsp; 
-                    <span class="date">2019/10/2</span>
-                    <span>posted in&nbsp;</span> 
-          				  
-          					    <span class="posted-in"><a href='%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97.html'>消息队列</a></span>
-          				   
-                  </div>
-                  <div class="more-right right">
-                  <span class="comments">
-                      
 
-                       
-                  </span>
-                  </div>
-                </div>
-              </div><!-- article -->
-        
-              
-
-
-			<div class="row">
-			  <div class="large-6 columns">
-			  <p class="text-left" style="padding-top:25px;">
-			   
-			  </p>
-			  </div>
-			  <div class="large-6 columns">
-			<p class="text-right" style="padding-top:25px;">
-			
-			</p>
-			  </div>
-			</div>
-		</div>
-	</div><!-- large 8 -->
 
  <div class="large-4 medium-4 columns">
   <div class="hide-for-small">
